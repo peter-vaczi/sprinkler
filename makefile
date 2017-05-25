@@ -1,8 +1,8 @@
 FULL=github.com/peter.vaczi/sprinklerd
 
 build:
-	go build -i $(FULL)
-	go build -i $(FULL)/cmd/sprctl
+	go build $(FULL)
+	go build $(FULL)/cmd/sprctl
 
 install:
 	go install $(FULL)
