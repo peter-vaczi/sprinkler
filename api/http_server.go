@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/peter.vaczi/sprinklerd/utils"
 )
 
 // API represents the http rest api of sprinklerd
@@ -16,7 +18,7 @@ type API interface {
 
 type HttpResponse struct {
 	Error error
-	Body  string
+	Body  interface{}
 }
 
 type HttpMsg struct {
@@ -35,6 +37,7 @@ func New(eventChan chan interface{}) API {
 	}
 
 	srv.router.HandleFunc("/v1", srv.statusHandler).Methods("GET")
+	srv.router.HandleFunc("/v1/status", srv.statusHandler).Methods("GET")
 
 	srv.server = &http.Server{
 		Handler:      srv.router,
@@ -71,9 +74,9 @@ func (s *httpServer) handleResponse(w http.ResponseWriter, r *http.Request, rch 
 	resp := <-rch
 
 	if resp.Error == nil {
-		if len(resp.Body) > 0 {
+		if resp.Body != nil {
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(w, resp.Body)
+			fmt.Fprint(w, utils.EncodeJson(resp.Body))
 		}
 	} else {
 		http.Error(w, resp.Error.Error(), http.StatusInternalServerError)

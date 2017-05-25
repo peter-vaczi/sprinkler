@@ -10,6 +10,7 @@ import (
 )
 
 var cfgFile string
+var daemonSocket string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -37,6 +38,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.sprctl.yaml)")
+	RootCmd.PersistentFlags().StringVarP(&daemonSocket, "socket", "s", "http://localhost:8000", "sprinklerd control socket")
 }
 
 // initConfig reads in config file and ENV variables if set.

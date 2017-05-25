@@ -21,6 +21,6 @@ func handleEvent(event interface{}) {
 
 	switch event := event.(type) {
 	case api.HttpStatus:
-		event.ResponseChan <- api.HttpResponse{Error: nil, Body: "hello"}
+		event.ResponseChan <- api.HttpResponse{Error: nil, Body: struct{}{}}
 	}
 }

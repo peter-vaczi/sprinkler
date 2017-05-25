@@ -1,9 +1,11 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
+
+	"github.com/peter.vaczi/sprinklerd/utils"
 )
 
 var statusCmd = &cobra.Command{
@@ -16,7 +18,15 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("status called")
+
+		var ret interface{}
+
+		err := utils.GetRequest(daemonSocket+"/v1/status", &ret)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Print(ret)
 	},
 }
 
