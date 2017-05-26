@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/peter.vaczi/sprinklerd/core"
 	"github.com/peter.vaczi/sprinklerd/utils"
 )
 
@@ -19,14 +20,14 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var ret interface{}
+		var ret core.Devices
 
 		err := utils.GetRequest(daemonSocket+"/v1/status", &ret)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		log.Print(ret)
+		log.Printf("%v", ret)
 	},
 }
 

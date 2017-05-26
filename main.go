@@ -2,18 +2,16 @@ package main
 
 import (
 	"github.com/peter.vaczi/sprinklerd/api"
+	"github.com/peter.vaczi/sprinklerd/core"
 )
 
-type Device struct {
-	Name string
-	On   bool
-}
-
-var Devices []Device
+var devs *core.Devices
 
 func init() {
-	Devices = append(Devices, Device{Name: "rotor-1"})
-	Devices = append(Devices, Device{Name: "rotor-2", On: true})
+	devs = core.New()
+	devs.Add("rotor-1")
+	dev, _ := devs.Add("rotor-2")
+	dev.TurnOn()
 }
 
 func main() {
@@ -32,6 +30,6 @@ func handleEvent(event interface{}) {
 
 	switch event := event.(type) {
 	case api.HttpStatus:
-		event.ResponseChan <- api.HttpResponse{Error: nil, Body: Devices}
+		event.ResponseChan <- api.HttpResponse{Error: nil, Body: devs}
 	}
 }
