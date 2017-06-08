@@ -44,5 +44,8 @@ func handleEvent(event interface{}) {
 	case api.HttpDeviceAdd:
 		err := devs.Add(event.Device)
 		event.ResponseChan <- api.HttpResponse{Error: err}
+	case api.HttpDeviceDel:
+		err := devs.Del(event.Name)
+		event.ResponseChan <- api.HttpResponse{Error: err}
 	}
 }

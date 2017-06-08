@@ -36,6 +36,11 @@ type HttpDeviceAdd struct {
 	Device *core.Device
 }
 
+type HttpDeviceDel struct {
+	HttpMsg
+	Name string
+}
+
 // New returns a new http api instance
 func New(eventChan chan interface{}) API {
 	srv := &httpServer{
@@ -46,6 +51,7 @@ func New(eventChan chan interface{}) API {
 	srv.router.HandleFunc("/v1", srv.listDevices).Methods("GET")
 	srv.router.HandleFunc("/v1/devices", srv.listDevices).Methods("GET")
 	srv.router.HandleFunc("/v1/devices", srv.addDevice).Methods("POST")
+	srv.router.HandleFunc("/v1/devices/{name}", srv.delDevice).Methods("DELETE")
 
 	srv.server = &http.Server{
 		Handler:      srv.router,
@@ -88,6 +94,14 @@ func (s *httpServer) addDevice(w http.ResponseWriter, r *http.Request) {
 	} else {
 		rch <- HttpResponse{Error: err}
 	}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) delDevice(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	s.eventChan <- HttpDeviceDel{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 

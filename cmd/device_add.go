@@ -32,6 +32,6 @@ var addCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(addCmd)
+	deviceCmd.AddCommand(addCmd)
 	addCmd.PersistentFlags().BoolVar(&addFlagOn, "on", false, "set the device on")
 }

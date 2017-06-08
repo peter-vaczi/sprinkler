@@ -14,7 +14,7 @@ var daemonSocket string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "sprctl",
+	Use:   "sprinkler",
 	Short: "CLI controller for the sprinkler daemon",
 	Long:  `CLI controller for the sprinkler daemon`,
 	// Uncomment the following line if your bare application
@@ -37,8 +37,8 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.sprctl.yaml)")
-	RootCmd.PersistentFlags().StringVarP(&daemonSocket, "socket", "s", "http://localhost:8000", "sprinklerd control socket")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.sprinkler.yaml)")
+	RootCmd.PersistentFlags().StringVarP(&daemonSocket, "socket", "s", "http://localhost:8000", "sprinkler daemon control socket")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -54,9 +54,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".sprctl" (without extension).
+		// Search config in home directory with name ".sprinkler" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".sprctl")
+		viper.SetConfigName(".sprinkler")
 	}
 
 	viper.SetEnvPrefix("SPRINKLER")

@@ -28,6 +28,15 @@ func (d *Devices) Add(dev *Device) error {
 	return nil
 }
 
+func (d *Devices) Del(name string) error {
+	if _, exists := (*d)[name]; exists {
+		delete(*d, name)
+		return nil
+	}
+
+	return NotFound
+}
+
 func (d *Device) TurnOn() {
 	d.On = true
 }

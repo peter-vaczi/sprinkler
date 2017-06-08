@@ -57,5 +57,5 @@ func printLine(line []string) {
 }
 
 func init() {
-	RootCmd.AddCommand(statusCmd)
+	deviceCmd.AddCommand(statusCmd)
 }
