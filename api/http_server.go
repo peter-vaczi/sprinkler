@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/peter.vaczi/sprinklerd/core"
 	"github.com/peter.vaczi/sprinklerd/utils"
 )
 
@@ -25,8 +27,13 @@ type HttpMsg struct {
 	ResponseChan chan HttpResponse
 }
 
-type HttpStatus struct {
+type HttpDeviceList struct {
 	HttpMsg
+}
+
+type HttpDeviceAdd struct {
+	HttpMsg
+	Device *core.Device
 }
 
 // New returns a new http api instance
@@ -36,8 +43,9 @@ func New(eventChan chan interface{}) API {
 		eventChan: eventChan,
 	}
 
-	srv.router.HandleFunc("/v1", srv.statusHandler).Methods("GET")
-	srv.router.HandleFunc("/v1/status", srv.statusHandler).Methods("GET")
+	srv.router.HandleFunc("/v1", srv.listDevices).Methods("GET")
+	srv.router.HandleFunc("/v1/devices", srv.listDevices).Methods("GET")
+	srv.router.HandleFunc("/v1/devices", srv.addDevice).Methods("POST")
 
 	srv.server = &http.Server{
 		Handler:      srv.router,
@@ -64,9 +72,22 @@ func (s *httpServer) Close() {
 	s.server.Close()
 }
 
-func (s *httpServer) statusHandler(w http.ResponseWriter, r *http.Request) {
+func (s *httpServer) listDevices(w http.ResponseWriter, r *http.Request) {
 	rch := make(chan HttpResponse)
-	s.eventChan <- HttpStatus{HttpMsg: HttpMsg{ResponseChan: rch}}
+	s.eventChan <- HttpDeviceList{HttpMsg: HttpMsg{ResponseChan: rch}}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) addDevice(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+
+	dev := &core.Device{}
+	err := json.NewDecoder(r.Body).Decode(dev)
+	if err == nil {
+		s.eventChan <- HttpDeviceAdd{HttpMsg: HttpMsg{ResponseChan: rch}, Device: dev}
+	} else {
+		rch <- HttpResponse{Error: err}
+	}
 	s.handleResponse(w, r, rch)
 }
 

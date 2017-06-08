@@ -19,14 +19,13 @@ func New() *Devices {
 	return &devs
 }
 
-func (d *Devices) Add(name string) (*Device, error) {
-	if _, exists := (*d)[name]; exists {
-		return nil, AlreadyExists
+func (d *Devices) Add(dev *Device) error {
+	if _, exists := (*d)[dev.Name]; exists {
+		return AlreadyExists
 	}
 
-	newDev := &Device{Name: name}
-	(*d)[name] = newDev
-	return newDev, nil
+	(*d)[dev.Name] = dev
+	return nil
 }
 
 func (d *Device) TurnOn() {

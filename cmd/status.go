@@ -19,7 +19,7 @@ var statusCmd = &cobra.Command{
 
 		var devs core.Devices
 
-		err := utils.GetRequest(daemonSocket+"/v1/status", &devs)
+		err := utils.GetRequest(daemonSocket+"/v1/devices", &devs)
 		if err != nil {
 			log.Fatal(err)
 		}

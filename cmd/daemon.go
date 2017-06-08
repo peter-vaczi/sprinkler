@@ -22,9 +22,6 @@ var daemonCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(daemonCmd)
 	devs = core.New()
-	devs.Add("rotor-1")
-	dev, _ := devs.Add("rotor-2")
-	dev.TurnOn()
 }
 
 func runDaemon() {
@@ -42,7 +39,10 @@ func runDaemon() {
 func handleEvent(event interface{}) {
 
 	switch event := event.(type) {
-	case api.HttpStatus:
+	case api.HttpDeviceList:
 		event.ResponseChan <- api.HttpResponse{Error: nil, Body: devs}
+	case api.HttpDeviceAdd:
+		err := devs.Add(event.Device)
+		event.ResponseChan <- api.HttpResponse{Error: err}
 	}
 }
