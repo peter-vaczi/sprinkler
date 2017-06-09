@@ -1,12 +1,12 @@
-hash: 3e55c90d3fdc9d553e1effaa8deca6fd585cdea76ad85ed92b0ad98f5fd05b53
-updated: 2017-05-18T21:36:37.41565298+02:00
+hash: dbb6fb7a3a42d190adaf033584d2c62de8059ba4026009e65592b52b6df90cf2
+updated: 2017-06-09T22:43:10.615099221+02:00
 imports:
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/hashicorp/hcl
   version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
@@ -44,6 +44,8 @@ imports:
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/spf13/viper
   version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
+- name: github.com/stianeikeland/go-rpio
+  version: 896db2ee1c7f95240dd6a09e56edf9cece107a34
 - name: golang.org/x/sys
   version: e62c3de784db939836898e5c19ffd41bece347da
   subpackages:
