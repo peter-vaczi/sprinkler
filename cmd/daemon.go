@@ -26,7 +26,7 @@ func init() {
 
 func runDaemon() {
 	mainEvents := make(chan interface{})
-	api.New(mainEvents)
+	api.New(daemonSocket, mainEvents)
 
 	for {
 		select {

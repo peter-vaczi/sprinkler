@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -42,11 +43,13 @@ type HttpDeviceDel struct {
 }
 
 // New returns a new http api instance
-func New(eventChan chan interface{}) API {
+func New(daemonSocket string, eventChan chan interface{}) API {
 	srv := &httpServer{
 		router:    mux.NewRouter().StrictSlash(false),
 		eventChan: eventChan,
 	}
+
+	ipPort := daemonSocket[strings.LastIndex(daemonSocket, "/")+1:]
 
 	srv.router.HandleFunc("/v1", srv.listDevices).Methods("GET")
 	srv.router.HandleFunc("/v1/devices", srv.listDevices).Methods("GET")
@@ -55,7 +58,7 @@ func New(eventChan chan interface{}) API {
 
 	srv.server = &http.Server{
 		Handler:      srv.router,
-		Addr:         "127.0.0.1:8000",
+		Addr:         ipPort,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
