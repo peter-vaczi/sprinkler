@@ -8,3 +8,7 @@ install:
 
 test:
 	go test $(FULL)
+
+build.arm:
+	GOARCH=arm GOOS=linux go build $(FULL)
+
