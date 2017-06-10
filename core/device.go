@@ -12,7 +12,7 @@ var (
 	NotFound      = errors.New("Not found")
 )
 
-func init() {
+func InitGpio() {
 	err := rpio.Open()
 	if err != nil {
 		log.Fatal(err)

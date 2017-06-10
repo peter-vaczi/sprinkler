@@ -26,6 +26,7 @@ func init() {
 
 func runDaemon() {
 	mainEvents := make(chan interface{})
+	core.InitGpio()
 	api.New(daemonSocket, mainEvents)
 
 	for {

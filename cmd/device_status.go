@@ -35,7 +35,7 @@ func printDevices(devs core.Devices) {
 	}
 	sort.Strings(keys)
 
-	printLine([]string{"NAME", "STATUS"})
+	printLine([]string{"NAME", "PIN", "STATUS"})
 	for _, k := range keys {
 		printDevice(devs[k])
 	}
@@ -44,6 +44,7 @@ func printDevices(devs core.Devices) {
 func printDevice(dev *core.Device) {
 	line := make([]string, 0, 2)
 	line = append(line, dev.Name)
+	line = append(line, fmt.Sprintf("%d", dev.Pin))
 	if dev.On {
 		line = append(line, "on")
 	} else {
@@ -53,7 +54,7 @@ func printDevice(dev *core.Device) {
 }
 
 func printLine(line []string) {
-	fmt.Printf("%-20s %-5s\n", line[0], line[1])
+	fmt.Printf("%-20s %-3s %-5s\n", line[0], line[1], line[2])
 }
 
 func init() {
