@@ -39,15 +39,17 @@ func (d *Devices) Add(dev *Device) error {
 	}
 
 	(*d)[dev.Name] = dev
-	dev.pin = rpio.Pin(dev.Pin)
-	dev.pin.Output()
-	if dev.On {
-		dev.pin.High()
-	} else {
-		dev.pin.Low()
-	}
+	dev.SetState(dev.Pin, dev.On)
 
 	return nil
+}
+
+func (d *Devices) Get(name string) (*Device, error) {
+	if dev, exists := (*d)[name]; exists {
+		return dev, nil
+	}
+
+	return nil, NotFound
 }
 
 func (d *Devices) Del(name string) error {
@@ -59,6 +61,21 @@ func (d *Devices) Del(name string) error {
 	return NotFound
 }
 
+func (d *Devices) Set(name string, newDev *Device) error {
+	if dev, exists := (*d)[name]; exists {
+		dev.SetState(newDev.Pin, newDev.On)
+		return nil
+	}
+
+	return NotFound
+}
+
+func (d *Device) SetPin(pin int) {
+	d.Pin = pin
+	d.pin = rpio.Pin(pin)
+	d.pin.Output()
+}
+
 func (d *Device) TurnOn() {
 	d.On = true
 	d.pin.High()
@@ -67,6 +84,15 @@ func (d *Device) TurnOn() {
 func (d *Device) TurnOff() {
 	d.On = false
 	d.pin.Low()
+}
+
+func (d *Device) SetState(pin int, on bool) {
+	d.SetPin(pin)
+	if on {
+		d.TurnOn()
+	} else {
+		d.TurnOff()
+	}
 }
 
 func (d *Device) IsOn() bool {
