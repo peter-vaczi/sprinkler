@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"sort"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
@@ -35,26 +37,21 @@ func printDevices(devs core.Devices) {
 	}
 	sort.Strings(keys)
 
-	printLine([]string{"NAME", "PIN", "STATUS"})
+	w := new(tabwriter.Writer)
+
+	w.Init(os.Stdout, 5, 0, 1, ' ', 0)
+	fmt.Fprintln(w, "NAME\tPIN\tSTATUS\t")
+
 	for _, k := range keys {
-		printDevice(devs[k])
+		onoff := "off"
+		if devs[k].On {
+			onoff = "on"
+		}
+		fmt.Fprintf(w, "%s\t%d\t%s\t\n", devs[k].Name, devs[k].Pin, onoff)
 	}
-}
 
-func printDevice(dev *core.Device) {
-	line := make([]string, 0, 2)
-	line = append(line, dev.Name)
-	line = append(line, fmt.Sprintf("%d", dev.Pin))
-	if dev.On {
-		line = append(line, "on")
-	} else {
-		line = append(line, "off")
-	}
-	printLine(line)
-}
-
-func printLine(line []string) {
-	fmt.Printf("%-20s %-3s %-5s\n", line[0], line[1], line[2])
+	fmt.Fprintln(w)
+	w.Flush()
 }
 
 func init() {
