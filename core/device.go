@@ -28,7 +28,7 @@ type Device struct {
 
 type Devices map[string]*Device
 
-func New() *Devices {
+func NewDevices() *Devices {
 	devs := make(Devices)
 	return &devs
 }

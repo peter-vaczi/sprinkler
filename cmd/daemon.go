@@ -8,6 +8,7 @@ import (
 )
 
 var devs *core.Devices
+var programs *core.Programs
 
 // daemonCmd represents the daemon command
 var daemonCmd = &cobra.Command{
@@ -21,7 +22,8 @@ var daemonCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(daemonCmd)
-	devs = core.New()
+	devs = core.NewDevices()
+	programs = core.NewPrograms()
 }
 
 func runDaemon() {
@@ -54,5 +56,16 @@ func handleEvent(event interface{}) {
 	case api.HttpDeviceSet:
 		err := devs.Set(event.Name, event.Device)
 		event.ResponseChan <- api.HttpResponse{Error: err}
+	case api.HttpProgramList:
+		event.ResponseChan <- api.HttpResponse{Error: nil, Body: programs}
+	case api.HttpProgramCreate:
+		err := programs.Add(event.Program)
+		event.ResponseChan <- api.HttpResponse{Error: err}
+		// case api.HttpProgramGet:
+		// 	prg, err := programs.Get(event.Name)
+		// 	event.ResponseChan <- api.HttpResponse{Error: err, Body: prg}
+		// case api.HttpProgramDel:
+		// 	err := programs.Del(event.Name)
+		// 	event.ResponseChan <- api.HttpResponse{Error: err}
 	}
 }

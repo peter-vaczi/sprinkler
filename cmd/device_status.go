@@ -13,7 +13,7 @@ import (
 	"github.com/peter.vaczi/sprinklerd/utils"
 )
 
-var statusCmd = &cobra.Command{
+var deviceStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show status",
 	Long:  `Show status`,
@@ -55,5 +55,5 @@ func printDevices(devs core.Devices) {
 }
 
 func init() {
-	deviceCmd.AddCommand(statusCmd)
+	deviceCmd.AddCommand(deviceStatusCmd)
 }

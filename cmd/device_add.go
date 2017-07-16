@@ -12,8 +12,8 @@ import (
 var addFlagOn bool
 var addFlagPin int
 
-// addCmd represents the add command
-var addCmd = &cobra.Command{
+// deviceAddCmd represents the add command
+var deviceAddCmd = &cobra.Command{
 	Use:   "add <name> [flags]",
 	Short: "Add a new device",
 	Long:  `Add a new device`,
@@ -33,7 +33,7 @@ var addCmd = &cobra.Command{
 }
 
 func init() {
-	deviceCmd.AddCommand(addCmd)
-	addCmd.PersistentFlags().IntVar(&addFlagPin, "pin", 0, "GPIO pin associated with this device")
-	addCmd.PersistentFlags().BoolVar(&addFlagOn, "on", false, "set the device on")
+	deviceCmd.AddCommand(deviceAddCmd)
+	deviceAddCmd.PersistentFlags().IntVar(&addFlagPin, "pin", 0, "GPIO pin associated with this device")
+	deviceAddCmd.PersistentFlags().BoolVar(&addFlagOn, "on", false, "set the device on")
 }

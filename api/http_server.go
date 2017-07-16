@@ -53,6 +53,25 @@ type HttpDeviceSet struct {
 	Device *core.Device
 }
 
+type HttpProgramList struct {
+	HttpMsg
+}
+
+type HttpProgramCreate struct {
+	HttpMsg
+	Program *core.Program
+}
+
+type HttpProgramGet struct {
+	HttpMsg
+	Name string
+}
+
+type HttpProgramDel struct {
+	HttpMsg
+	Name string
+}
+
 // New returns a new http api instance
 func New(daemonSocket string, eventChan chan interface{}) API {
 	srv := &httpServer{
@@ -68,6 +87,10 @@ func New(daemonSocket string, eventChan chan interface{}) API {
 	srv.router.HandleFunc("/v1/devices/{name}", srv.getDevice).Methods("GET")
 	srv.router.HandleFunc("/v1/devices/{name}", srv.delDevice).Methods("DELETE")
 	srv.router.HandleFunc("/v1/devices/{name}", srv.setDevice).Methods("PUT")
+	srv.router.HandleFunc("/v1/programs", srv.listPrograms).Methods("GET")
+	srv.router.HandleFunc("/v1/programs", srv.createProgram).Methods("POST")
+	srv.router.HandleFunc("/v1/programs/{name}", srv.getProgram).Methods("GET")
+	srv.router.HandleFunc("/v1/programs/{name}", srv.delProgram).Methods("DELETE")
 
 	srv.server = &http.Server{
 		Handler:      srv.router,
@@ -141,6 +164,41 @@ func (s *httpServer) setDevice(w http.ResponseWriter, r *http.Request) {
 	} else {
 		rch <- HttpResponse{Error: err}
 	}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) listPrograms(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+	s.eventChan <- HttpProgramList{HttpMsg: HttpMsg{ResponseChan: rch}}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) createProgram(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+
+	prg := &core.Program{}
+	err := json.NewDecoder(r.Body).Decode(prg)
+	if err == nil {
+		s.eventChan <- HttpProgramCreate{HttpMsg: HttpMsg{ResponseChan: rch}, Program: prg}
+	} else {
+		rch <- HttpResponse{Error: err}
+	}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) getProgram(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	s.eventChan <- HttpProgramGet{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) delProgram(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	s.eventChan <- HttpProgramDel{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 

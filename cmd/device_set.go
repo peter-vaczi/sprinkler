@@ -13,8 +13,8 @@ var setFlagOn bool
 var setFlagOff bool
 var setFlagPin int = -1
 
-// setCmd represents the add command
-var setCmd = &cobra.Command{
+// deviceSetCmd represents the add command
+var deviceSetCmd = &cobra.Command{
 	Use:   "set <name> [flags]",
 	Short: "Set parameters of a device",
 	Long:  `Set parameters of a device`,
@@ -52,8 +52,8 @@ var setCmd = &cobra.Command{
 }
 
 func init() {
-	deviceCmd.AddCommand(setCmd)
-	setCmd.PersistentFlags().IntVar(&setFlagPin, "pin", -1, "GPIO pin associated with this device")
-	setCmd.PersistentFlags().BoolVar(&setFlagOn, "on", false, "set the device on")
-	setCmd.PersistentFlags().BoolVar(&setFlagOff, "off", false, "set the device off")
+	deviceCmd.AddCommand(deviceSetCmd)
+	deviceSetCmd.PersistentFlags().IntVar(&setFlagPin, "pin", -1, "GPIO pin associated with this device")
+	deviceSetCmd.PersistentFlags().BoolVar(&setFlagOn, "on", false, "set the device on")
+	deviceSetCmd.PersistentFlags().BoolVar(&setFlagOff, "off", false, "set the device off")
 }

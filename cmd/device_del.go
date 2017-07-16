@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// delCmd represents the del command
-var delCmd = &cobra.Command{
+// deviceDelCmd represents the del command
+var deviceDelCmd = &cobra.Command{
 	Use:   "del",
 	Short: "Delete a device",
 	Long:  `Delete a device`,
@@ -28,5 +28,5 @@ var delCmd = &cobra.Command{
 }
 
 func init() {
-	deviceCmd.AddCommand(delCmd)
+	deviceCmd.AddCommand(deviceDelCmd)
 }
