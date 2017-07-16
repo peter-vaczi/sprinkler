@@ -61,11 +61,11 @@ func handleEvent(event interface{}) {
 	case api.HttpProgramCreate:
 		err := programs.Add(event.Program)
 		event.ResponseChan <- api.HttpResponse{Error: err}
-		// case api.HttpProgramGet:
-		// 	prg, err := programs.Get(event.Name)
-		// 	event.ResponseChan <- api.HttpResponse{Error: err, Body: prg}
-		// case api.HttpProgramDel:
-		// 	err := programs.Del(event.Name)
-		// 	event.ResponseChan <- api.HttpResponse{Error: err}
+	case api.HttpProgramGet:
+		prg, err := programs.Get(event.Name)
+		event.ResponseChan <- api.HttpResponse{Error: err, Body: prg}
+	case api.HttpProgramDel:
+		err := programs.Del(event.Name)
+		event.ResponseChan <- api.HttpResponse{Error: err}
 	}
 }

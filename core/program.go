@@ -20,3 +20,20 @@ func (p *Programs) Add(prog *Program) error {
 
 	return nil
 }
+
+func (p *Programs) Get(name string) (*Program, error) {
+	if prg, exists := (*p)[name]; exists {
+		return prg, nil
+	}
+
+	return nil, NotFound
+}
+
+func (p *Programs) Del(name string) error {
+	if _, exists := (*p)[name]; exists {
+		delete(*p, name)
+		return nil
+	}
+
+	return NotFound
+}
