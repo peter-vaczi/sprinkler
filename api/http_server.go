@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -72,6 +73,19 @@ type HttpProgramDel struct {
 	Name string
 }
 
+type HttpProgramAddDevice struct {
+	HttpMsg
+	Program  string
+	Device   string
+	Duration time.Duration
+}
+
+type HttpProgramDelDevice struct {
+	HttpMsg
+	Program string
+	Idx     int
+}
+
 // New returns a new http api instance
 func New(daemonSocket string, eventChan chan interface{}) API {
 	srv := &httpServer{
@@ -91,6 +105,8 @@ func New(daemonSocket string, eventChan chan interface{}) API {
 	srv.router.HandleFunc("/v1/programs", srv.createProgram).Methods("POST")
 	srv.router.HandleFunc("/v1/programs/{name}", srv.getProgram).Methods("GET")
 	srv.router.HandleFunc("/v1/programs/{name}", srv.delProgram).Methods("DELETE")
+	srv.router.HandleFunc("/v1/programs/{name}/devices", srv.addDeviceToProgram).Methods("POST")
+	srv.router.HandleFunc("/v1/programs/{name}/devices/{idx}", srv.delDeviceFromProgram).Methods("DELETE")
 
 	srv.server = &http.Server{
 		Handler:      srv.router,
@@ -202,15 +218,44 @@ func (s *httpServer) delProgram(w http.ResponseWriter, r *http.Request) {
 	s.handleResponse(w, r, rch)
 }
 
+func (s *httpServer) addDeviceToProgram(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse, 1)
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	data := make(map[string]string)
+	err := json.NewDecoder(r.Body).Decode(&data)
+	dur, _ := time.ParseDuration(data["duration"])
+
+	if err == nil {
+		s.eventChan <- HttpProgramAddDevice{HttpMsg: HttpMsg{ResponseChan: rch}, Program: name, Device: data["device"], Duration: dur}
+	} else {
+		rch <- HttpResponse{Error: err}
+	}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) delDeviceFromProgram(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	idx, _ := strconv.Atoi(vars["idx"])
+
+	s.eventChan <- HttpProgramDelDevice{HttpMsg: HttpMsg{ResponseChan: rch}, Program: name, Idx: idx}
+	s.handleResponse(w, r, rch)
+}
+
 func (s *httpServer) handleResponse(w http.ResponseWriter, r *http.Request, rch chan HttpResponse) {
 	resp := <-rch
 
 	if resp.Error == nil {
+		log.Printf("%s %s -> %s ", r.Method, r.URL, "200 OK")
 		if resp.Body != nil {
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprint(w, utils.EncodeJson(resp.Body))
 		}
 	} else {
+		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
 		http.Error(w, resp.Error.Error(), http.StatusInternalServerError)
 	}
 }

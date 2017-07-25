@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"text/tabwriter"
 
 	"github.com/peter.vaczi/sprinklerd/core"
 	"github.com/peter.vaczi/sprinklerd/utils"
@@ -29,7 +30,17 @@ var programShowCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Printf("Name: %s\n", prg.Name)
+		fmt.Printf("Name: %s\n\n", prg.Name)
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 5, 0, 1, ' ', 0)
+		fmt.Fprintln(w, "NR\tDEVICE\tDURATION\t")
+
+		for i, e := range prg.Elements {
+			fmt.Fprintf(w, "%d\t%s\t%s\t\n", i, e.Device.Name, e.Duration)
+		}
+
+		fmt.Fprintln(w)
+		w.Flush()
 	},
 }
 

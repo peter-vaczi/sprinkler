@@ -10,10 +10,10 @@ import (
 )
 
 // programAddCmd represents the add command
-var programCreateCmd = &cobra.Command{
-	Use:   "create <name>",
-	Short: "Create a new watering program",
-	Long:  `Create a new watering program`,
+var programAddCmd = &cobra.Command{
+	Use:   "add <name>",
+	Short: "Add a new watering program",
+	Long:  `Add a new watering program`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) != 1 {
@@ -30,5 +30,5 @@ var programCreateCmd = &cobra.Command{
 }
 
 func init() {
-	programCmd.AddCommand(programCreateCmd)
+	programCmd.AddCommand(programAddCmd)
 }

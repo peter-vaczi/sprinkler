@@ -32,7 +32,6 @@ var deviceSetCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		log.Print(dev)
 		if setFlagPin != -1 {
 			dev.Pin = setFlagPin
 		}
@@ -43,7 +42,6 @@ var deviceSetCmd = &cobra.Command{
 			dev.On = false
 		}
 
-		log.Print(dev)
 		err = utils.PutRequest(daemonSocket+"/v1/devices/"+dev.Name, &dev)
 		if err != nil {
 			log.Fatal(err)

@@ -67,5 +67,26 @@ func handleEvent(event interface{}) {
 	case api.HttpProgramDel:
 		err := programs.Del(event.Name)
 		event.ResponseChan <- api.HttpResponse{Error: err}
+	case api.HttpProgramAddDevice:
+		prg, err := programs.Get(event.Program)
+		if err != nil {
+			event.ResponseChan <- api.HttpResponse{Error: err}
+			return
+		}
+		dev, err := devs.Get(event.Device)
+		if err != nil {
+			event.ResponseChan <- api.HttpResponse{Error: err}
+			return
+		}
+		err = prg.AddDevice(dev, event.Duration)
+		event.ResponseChan <- api.HttpResponse{Error: err}
+	case api.HttpProgramDelDevice:
+		prg, err := programs.Get(event.Program)
+		if err != nil {
+			event.ResponseChan <- api.HttpResponse{Error: err}
+			return
+		}
+		err = prg.DelDevice(event.Idx)
+		event.ResponseChan <- api.HttpResponse{Error: err}
 	}
 }

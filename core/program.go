@@ -1,7 +1,18 @@
 package core
 
+import (
+	"errors"
+	"time"
+)
+
+type ProgramElement struct {
+	Device   *Device
+	Duration time.Duration
+}
+
 type Program struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Elements []ProgramElement
 }
 
 type Programs map[string]*Program
@@ -36,4 +47,26 @@ func (p *Programs) Del(name string) error {
 	}
 
 	return NotFound
+}
+
+func (p *Program) AddDevice(device *Device, duration time.Duration) error {
+	p.Elements = append(p.Elements, ProgramElement{Device: device, Duration: duration})
+
+	return nil
+}
+
+func (p *Program) DelDevice(idx int) error {
+	if idx >= len(p.Elements) {
+		return errors.New("Element index out of range")
+	}
+	p.Elements = append(p.Elements[:idx], p.Elements[idx+1:]...)
+	return nil
+}
+
+func (p *Program) Reset() error {
+	for _, elem := range p.Elements {
+		elem.Device.TurnOff()
+	}
+
+	return nil
 }

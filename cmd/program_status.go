@@ -13,26 +13,26 @@ import (
 	"github.com/peter.vaczi/sprinklerd/utils"
 )
 
-var deviceStatusCmd = &cobra.Command{
+var programStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show status",
 	Long:  `Show status`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var devs core.Devices
+		var progs core.Programs
 
-		err := utils.GetRequest(daemonSocket+"/v1/devices", &devs)
+		err := utils.GetRequest(daemonSocket+"/v1/programs", &progs)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		printDevices(devs)
+		printPrograms(progs)
 	},
 }
 
-func printDevices(devs core.Devices) {
-	keys := make([]string, 0, len(devs))
-	for k := range devs {
+func printPrograms(progs core.Programs) {
+	keys := make([]string, 0, len(progs))
+	for k := range progs {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -40,19 +40,15 @@ func printDevices(devs core.Devices) {
 	w := new(tabwriter.Writer)
 
 	w.Init(os.Stdout, 5, 0, 1, ' ', 0)
-	fmt.Fprintln(w, "NAME\tPIN\tSTATUS\t")
+	fmt.Fprintln(w, "NAME\t")
 
 	for _, k := range keys {
-		onoff := "off"
-		if devs[k].On {
-			onoff = "on"
-		}
-		fmt.Fprintf(w, "%s\t%d\t%s\t\n", devs[k].Name, devs[k].Pin, onoff)
+		fmt.Fprintf(w, "%s\t\n", progs[k].Name)
 	}
 
 	w.Flush()
 }
 
 func init() {
-	deviceCmd.AddCommand(deviceStatusCmd)
+	programCmd.AddCommand(programStatusCmd)
 }
