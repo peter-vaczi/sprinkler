@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"log"
 	"time"
 )
 
@@ -69,4 +70,23 @@ func (p *Program) Reset() error {
 	}
 
 	return nil
+}
+
+func (p *Program) Start() error {
+	go func() {
+		log.Printf("program %s is started", p.Name)
+		for _, elem := range p.Elements {
+			elem.Device.TurnOn()
+			time.Sleep(elem.Duration)
+			elem.Device.TurnOff()
+			time.Sleep(1 * time.Second)
+		}
+		log.Printf("program %s is finished", p.Name)
+	}()
+
+	return nil
+}
+
+func (p *Program) Stop() error {
+	return p.Reset()
 }

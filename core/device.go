@@ -79,11 +79,13 @@ func (d *Device) SetPin(pin int) {
 func (d *Device) TurnOn() {
 	d.On = true
 	d.pin.High()
+	log.Printf("device %s is on", d.Name)
 }
 
 func (d *Device) TurnOff() {
 	d.On = false
 	d.pin.Low()
+	log.Printf("device %s is off", d.Name)
 }
 
 func (d *Device) SetState(pin int, on bool) {

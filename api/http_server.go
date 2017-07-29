@@ -73,6 +73,16 @@ type HttpProgramDel struct {
 	Name string
 }
 
+type HttpProgramStart struct {
+	HttpMsg
+	Name string
+}
+
+type HttpProgramStop struct {
+	HttpMsg
+	Name string
+}
+
 type HttpProgramAddDevice struct {
 	HttpMsg
 	Program  string
@@ -105,6 +115,8 @@ func New(daemonSocket string, eventChan chan interface{}) API {
 	srv.router.HandleFunc("/v1/programs", srv.createProgram).Methods("POST")
 	srv.router.HandleFunc("/v1/programs/{name}", srv.getProgram).Methods("GET")
 	srv.router.HandleFunc("/v1/programs/{name}", srv.delProgram).Methods("DELETE")
+	srv.router.HandleFunc("/v1/programs/{name}/start", srv.startProgram).Methods("POST")
+	srv.router.HandleFunc("/v1/programs/{name}/stop", srv.stopProgram).Methods("POST")
 	srv.router.HandleFunc("/v1/programs/{name}/devices", srv.addDeviceToProgram).Methods("POST")
 	srv.router.HandleFunc("/v1/programs/{name}/devices/{idx}", srv.delDeviceFromProgram).Methods("DELETE")
 
@@ -215,6 +227,22 @@ func (s *httpServer) delProgram(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 	s.eventChan <- HttpProgramDel{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) startProgram(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	s.eventChan <- HttpProgramStart{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) stopProgram(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan HttpResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	s.eventChan <- HttpProgramStop{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 

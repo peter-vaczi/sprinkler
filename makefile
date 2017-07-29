@@ -23,8 +23,8 @@ setup:
 	sprinklerd $(OPTS) device add dev5 --pin 15
 	sprinklerd $(OPTS) program add pr1
 	sprinklerd $(OPTS) program add pr2
-	sprinklerd $(OPTS) program adddevice pr1 dev1 --duration 25m
-	sprinklerd $(OPTS) program adddevice pr1 dev2 --duration 25m
-	sprinklerd $(OPTS) program adddevice pr1 dev3 --duration 10m
-	sprinklerd $(OPTS) program adddevice pr1 dev4 --duration 10m
-	sprinklerd $(OPTS) program adddevice pr2 dev5 --duration 1h
+	sprinklerd $(OPTS) program adddevice pr1 dev1 --duration 5s
+	sprinklerd $(OPTS) program adddevice pr1 dev2 --duration 5s
+	sprinklerd $(OPTS) program adddevice pr1 dev3 --duration 3s
+	sprinklerd $(OPTS) program adddevice pr1 dev4 --duration 3s
+	sprinklerd $(OPTS) program adddevice pr2 dev5 --duration 10s
