@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"errors"
 	"log"
 	"time"
@@ -14,6 +15,8 @@ type ProgramElement struct {
 type Program struct {
 	Name     string `json:"name"`
 	Elements []ProgramElement
+	ctx      context.Context
+	cancel   context.CancelFunc
 }
 
 type Programs map[string]*Program
@@ -65,6 +68,7 @@ func (p *Program) DelDevice(idx int) error {
 }
 
 func (p *Program) Reset() error {
+	p.cancel()
 	for _, elem := range p.Elements {
 		elem.Device.TurnOff()
 	}
@@ -73,11 +77,21 @@ func (p *Program) Reset() error {
 }
 
 func (p *Program) Start() error {
+	p.ctx, p.cancel = context.WithCancel(context.Background())
 	go func() {
 		log.Printf("program %s is started", p.Name)
+
 		for _, elem := range p.Elements {
 			elem.Device.TurnOn()
-			time.Sleep(elem.Duration)
+
+			t := time.NewTimer(elem.Duration)
+			select {
+			case <-p.ctx.Done():
+				log.Printf("program %s is canceled", p.Name)
+				return
+			case <-t.C:
+				// do nothing
+			}
 			elem.Device.TurnOff()
 			time.Sleep(1 * time.Second)
 		}
