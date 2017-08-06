@@ -20,82 +20,6 @@ type API interface {
 	Close()
 }
 
-type HttpResponse struct {
-	Error error
-	Body  interface{}
-}
-
-type HttpMsg struct {
-	ResponseChan chan HttpResponse
-}
-
-type HttpDeviceList struct {
-	HttpMsg
-}
-
-type HttpDeviceAdd struct {
-	HttpMsg
-	Device *core.Device
-}
-
-type HttpDeviceGet struct {
-	HttpMsg
-	Name string
-}
-
-type HttpDeviceDel struct {
-	HttpMsg
-	Name string
-}
-
-type HttpDeviceSet struct {
-	HttpMsg
-	Name   string
-	Device *core.Device
-}
-
-type HttpProgramList struct {
-	HttpMsg
-}
-
-type HttpProgramCreate struct {
-	HttpMsg
-	Program *core.Program
-}
-
-type HttpProgramGet struct {
-	HttpMsg
-	Name string
-}
-
-type HttpProgramDel struct {
-	HttpMsg
-	Name string
-}
-
-type HttpProgramStart struct {
-	HttpMsg
-	Name string
-}
-
-type HttpProgramStop struct {
-	HttpMsg
-	Name string
-}
-
-type HttpProgramAddDevice struct {
-	HttpMsg
-	Program  string
-	Device   string
-	Duration time.Duration
-}
-
-type HttpProgramDelDevice struct {
-	HttpMsg
-	Program string
-	Idx     int
-}
-
 // New returns a new http api instance
 func New(daemonSocket string, eventChan chan interface{}) API {
 	srv := &httpServer{
@@ -146,108 +70,108 @@ func (s *httpServer) Close() {
 }
 
 func (s *httpServer) listDevices(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
-	s.eventChan <- HttpDeviceList{HttpMsg: HttpMsg{ResponseChan: rch}}
+	rch := make(chan core.MsgResponse)
+	s.eventChan <- core.MsgDeviceList{MsgRequest: core.MsgRequest{ResponseChan: rch}}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) addDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 
 	dev := &core.Device{}
 	err := json.NewDecoder(r.Body).Decode(dev)
 	if err == nil {
-		s.eventChan <- HttpDeviceAdd{HttpMsg: HttpMsg{ResponseChan: rch}, Device: dev}
+		s.eventChan <- core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: rch}, Device: dev}
 	} else {
-		rch <- HttpResponse{Error: err}
+		rch <- core.MsgResponse{Error: err}
 	}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) getDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- HttpDeviceGet{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.eventChan <- core.MsgDeviceGet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) delDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- HttpDeviceDel{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.eventChan <- core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) setDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
 
 	dev := &core.Device{}
 	err := json.NewDecoder(r.Body).Decode(dev)
 	if err == nil {
-		s.eventChan <- HttpDeviceSet{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name, Device: dev}
+		s.eventChan <- core.MsgDeviceSet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name, Device: dev}
 	} else {
-		rch <- HttpResponse{Error: err}
+		rch <- core.MsgResponse{Error: err}
 	}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) listPrograms(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
-	s.eventChan <- HttpProgramList{HttpMsg: HttpMsg{ResponseChan: rch}}
+	rch := make(chan core.MsgResponse)
+	s.eventChan <- core.MsgProgramList{MsgRequest: core.MsgRequest{ResponseChan: rch}}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) createProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 
 	prg := &core.Program{}
 	err := json.NewDecoder(r.Body).Decode(prg)
 	if err == nil {
-		s.eventChan <- HttpProgramCreate{HttpMsg: HttpMsg{ResponseChan: rch}, Program: prg}
+		s.eventChan <- core.MsgProgramCreate{MsgRequest: core.MsgRequest{ResponseChan: rch}, Program: prg}
 	} else {
-		rch <- HttpResponse{Error: err}
+		rch <- core.MsgResponse{Error: err}
 	}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) getProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- HttpProgramGet{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.eventChan <- core.MsgProgramGet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) delProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- HttpProgramDel{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.eventChan <- core.MsgProgramDel{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) startProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- HttpProgramStart{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.eventChan <- core.MsgProgramStart{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) stopProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- HttpProgramStop{HttpMsg: HttpMsg{ResponseChan: rch}, Name: name}
+	s.eventChan <- core.MsgProgramStop{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) addDeviceToProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse, 1)
+	rch := make(chan core.MsgResponse, 1)
 	vars := mux.Vars(r)
 	name := vars["name"]
 
@@ -256,24 +180,24 @@ func (s *httpServer) addDeviceToProgram(w http.ResponseWriter, r *http.Request) 
 	dur, _ := time.ParseDuration(data["duration"])
 
 	if err == nil {
-		s.eventChan <- HttpProgramAddDevice{HttpMsg: HttpMsg{ResponseChan: rch}, Program: name, Device: data["device"], Duration: dur}
+		s.eventChan <- core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: rch}, Program: name, Device: data["device"], Duration: dur}
 	} else {
-		rch <- HttpResponse{Error: err}
+		rch <- core.MsgResponse{Error: err}
 	}
 	s.handleResponse(w, r, rch)
 }
 
 func (s *httpServer) delDeviceFromProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan HttpResponse)
+	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
 	idx, _ := strconv.Atoi(vars["idx"])
 
-	s.eventChan <- HttpProgramDelDevice{HttpMsg: HttpMsg{ResponseChan: rch}, Program: name, Idx: idx}
+	s.eventChan <- core.MsgProgramDelDevice{MsgRequest: core.MsgRequest{ResponseChan: rch}, Program: name, Idx: idx}
 	s.handleResponse(w, r, rch)
 }
 
-func (s *httpServer) handleResponse(w http.ResponseWriter, r *http.Request, rch chan HttpResponse) {
+func (s *httpServer) handleResponse(w http.ResponseWriter, r *http.Request, rch chan core.MsgResponse) {
 	resp := <-rch
 
 	if resp.Error == nil {
