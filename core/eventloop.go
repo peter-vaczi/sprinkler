@@ -1,9 +1,12 @@
 package core
 
 import (
-	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type Data struct {
@@ -13,6 +16,8 @@ type Data struct {
 
 var data Data
 
+const DataFile = "/var/lib/sprinkler.data"
+
 func init() {
 	data = Data{Devices: NewDevices(),
 		Programs: NewPrograms(),
@@ -20,20 +25,56 @@ func init() {
 }
 
 func LoadState() {
+	file, err := os.Open(DataFile)
+	if err != nil {
+		if err == os.ErrNotExist {
+			return
+		}
+		log.Printf("failed to open data file: %v", err)
+		return
+	}
+
+	err = json.NewDecoder(file).Decode(&data)
+	if err != nil {
+		log.Printf("failed to parse data file: %v", err)
+		return
+	}
+
+	// re-initialize the gpio members
+	for _, dev := range *data.Devices {
+		dev.SetState(dev.Pin, dev.On)
+	}
+
+	// re-initialize the device pointers
+	for _, pr := range *data.Programs {
+		for _, elem := range pr.Elements {
+			elem.Device, err = data.Devices.Get(elem.DeviceName)
+			if err != nil {
+				log.Printf("invalid data file, device %s not found", elem.DeviceName)
+				return
+			}
+		}
+	}
 }
 
 func StoreState() {
 	js, err := json.Marshal(data)
-	if err == nil {
-		log.Printf("json data: %v", bytes.NewBuffer(js))
+	if err != nil {
+		log.Printf("failed to convert data to json: %v", err)
 	}
+
+	err = ioutil.WriteFile(DataFile, js, 0744)
 }
 
 func Run(mainEvents chan interface{}) {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		select {
 		case event := <-mainEvents:
 			handleEvent(event)
+		case <-sigChan:
+			return
 		}
 	}
 }

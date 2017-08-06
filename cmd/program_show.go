@@ -36,7 +36,7 @@ var programShowCmd = &cobra.Command{
 		fmt.Fprintln(w, "NR\tDEVICE\tDURATION\t")
 
 		for i, e := range prg.Elements {
-			fmt.Fprintf(w, "%d\t%s\t%s\t\n", i, e.Device.Name, e.Duration)
+			fmt.Fprintf(w, "%d\t%s\t%s\t\n", i, e.DeviceName, e.Duration)
 		}
 
 		fmt.Fprintln(w)

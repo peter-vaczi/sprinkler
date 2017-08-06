@@ -8,13 +8,14 @@ import (
 )
 
 type ProgramElement struct {
-	Device   *Device
-	Duration time.Duration
+	DeviceName string        `json:"device"`
+	Device     *Device       `json:"-"`
+	Duration   time.Duration `json:"duration"`
 }
 
 type Program struct {
-	Name     string `json:"name"`
-	Elements []ProgramElement
+	Name     string            `json:"name"`
+	Elements []*ProgramElement `json:"elements"`
 	ctx      context.Context
 	cancel   context.CancelFunc
 }
@@ -54,7 +55,7 @@ func (p *Programs) Del(name string) error {
 }
 
 func (p *Program) AddDevice(device *Device, duration time.Duration) error {
-	p.Elements = append(p.Elements, ProgramElement{Device: device, Duration: duration})
+	p.Elements = append(p.Elements, &ProgramElement{DeviceName: device.Name, Device: device, Duration: duration})
 
 	return nil
 }
