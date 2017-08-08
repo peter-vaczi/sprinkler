@@ -22,6 +22,10 @@ type Program struct {
 
 type Programs map[string]*Program
 
+var (
+	OutOfRange = errors.New("Element index out of range")
+)
+
 func NewPrograms() *Programs {
 	progs := make(Programs)
 	return &progs
@@ -62,22 +66,20 @@ func (p *Program) AddDevice(device *Device, duration time.Duration) error {
 
 func (p *Program) DelDevice(idx int) error {
 	if idx >= len(p.Elements) {
-		return errors.New("Element index out of range")
+		return OutOfRange
 	}
 	p.Elements = append(p.Elements[:idx], p.Elements[idx+1:]...)
 	return nil
 }
 
-func (p *Program) Reset() error {
+func (p *Program) Reset() {
 	p.cancel()
 	for _, elem := range p.Elements {
 		elem.Device.TurnOff()
 	}
-
-	return nil
 }
 
-func (p *Program) Start() error {
+func (p *Program) Start() {
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	go func() {
 		log.Printf("program %s is started", p.Name)
@@ -98,10 +100,8 @@ func (p *Program) Start() error {
 		}
 		log.Printf("program %s is finished", p.Name)
 	}()
-
-	return nil
 }
 
-func (p *Program) Stop() error {
-	return p.Reset()
+func (p *Program) Stop() {
+	p.Reset()
 }

@@ -10,10 +10,10 @@ import (
 var (
 	AlreadyExists = errors.New("Already exists")
 	NotFound      = errors.New("Not found")
-	gpioLib       *gpio.Gpio
+	gpioLib       gpio.Gpio
 )
 
-func InitGpio(g *gpio.Gpio) {
+func InitGpio(g gpio.Gpio) {
 	gpioLib = g
 }
 
@@ -93,6 +93,10 @@ func (d *Device) SetState(pin int, on bool) {
 	} else {
 		d.TurnOff()
 	}
+}
+
+func (d *Device) Init() {
+	d.SetState(d.Pin, d.On)
 }
 
 func (d *Device) IsOn() bool {

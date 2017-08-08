@@ -9,7 +9,7 @@ install:
 	go install $(FULL)
 
 test:
-	go test $(FULL)
+	go test -cover -coverprofile cover.core.out $(FULL)/core
 
 build.arm:
 	GOARCH=arm GOOS=linux go build $(FULL)

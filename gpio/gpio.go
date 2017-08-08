@@ -2,15 +2,23 @@ package gpio
 
 import rpio "github.com/stianeikeland/go-rpio"
 
-type Gpio struct {
+type Gpio interface {
+	NewPin(p int) Pin
 }
 
-func New() (*Gpio, error) {
+type gpioImpl struct {
+}
+
+func (g *gpioImpl) NewPin(p int) Pin {
+	return pin(p)
+}
+
+func New() (Gpio, error) {
 	err := rpio.Open()
 	if err != nil {
 		return nil, err
 	}
-	return &Gpio{}, nil
+	return &gpioImpl{}, nil
 }
 
 type Pin interface {
@@ -19,22 +27,16 @@ type Pin interface {
 	Low()
 }
 
-type pin struct {
-	pin rpio.Pin
+type pin rpio.Pin
+
+func (p pin) Output() {
+	rpio.Pin(p).Output()
 }
 
-func (g *Gpio) NewPin(p int) Pin {
-	return &pin{pin: rpio.Pin(p)}
+func (p pin) High() {
+	rpio.Pin(p).High()
 }
 
-func (p *pin) Output() {
-	p.pin.Output()
-}
-
-func (p *pin) High() {
-	p.pin.High()
-}
-
-func (p *pin) Low() {
-	p.pin.Low()
+func (p pin) Low() {
+	rpio.Pin(p).Low()
 }

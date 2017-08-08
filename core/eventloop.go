@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -66,7 +67,7 @@ func StoreState() {
 	err = ioutil.WriteFile(DataFile, js, 0744)
 }
 
-func Run(mainEvents chan interface{}) {
+func Run(ctx context.Context, mainEvents chan interface{}) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 	for {
@@ -74,6 +75,8 @@ func Run(mainEvents chan interface{}) {
 		case event := <-mainEvents:
 			handleEvent(event)
 		case <-sigChan:
+			return
+		case <-ctx.Done():
 			return
 		}
 	}
@@ -113,7 +116,7 @@ func handleEvent(event interface{}) {
 			event.ResponseChan <- MsgResponse{Error: err}
 			return
 		}
-		err = prg.Start()
+		prg.Start()
 		event.ResponseChan <- MsgResponse{Error: err}
 	case MsgProgramStop:
 		prg, err := data.Programs.Get(event.Name)
@@ -121,7 +124,7 @@ func handleEvent(event interface{}) {
 			event.ResponseChan <- MsgResponse{Error: err}
 			return
 		}
-		err = prg.Stop()
+		prg.Stop()
 		event.ResponseChan <- MsgResponse{Error: err}
 	case MsgProgramAddDevice:
 		prg, err := data.Programs.Get(event.Program)
