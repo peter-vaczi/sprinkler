@@ -4,26 +4,24 @@ import (
 	"errors"
 	"log"
 
-	rpio "github.com/stianeikeland/go-rpio"
+	"github.com/peter.vaczi/sprinklerd/gpio"
 )
 
 var (
 	AlreadyExists = errors.New("Already exists")
 	NotFound      = errors.New("Not found")
+	gpioLib       *gpio.Gpio
 )
 
-func InitGpio() {
-	err := rpio.Open()
-	if err != nil {
-		log.Fatal(err)
-	}
+func InitGpio(g *gpio.Gpio) {
+	gpioLib = g
 }
 
 type Device struct {
 	Name string `json:"name"`
 	On   bool   `json:"on"`
 	Pin  int    `json:"pin"`
-	pin  rpio.Pin
+	pin  gpio.Pin
 }
 
 type Devices map[string]*Device
@@ -72,7 +70,7 @@ func (d *Devices) Set(name string, newDev *Device) error {
 
 func (d *Device) SetPin(pin int) {
 	d.Pin = pin
-	d.pin = rpio.Pin(pin)
+	d.pin = gpioLib.NewPin(pin)
 	d.pin.Output()
 }
 

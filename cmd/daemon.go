@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 
 	"github.com/peter.vaczi/sprinklerd/api"
 	"github.com/peter.vaczi/sprinklerd/core"
+	"github.com/peter.vaczi/sprinklerd/gpio"
 )
 
 // daemonCmd represents the daemon command
@@ -23,7 +26,11 @@ func init() {
 
 func runDaemon() {
 	mainEvents := make(chan interface{})
-	core.InitGpio()
+	g, err := gpio.New()
+	if err != nil {
+		log.Fatalf("failed to initialize the gpio library: %v", err)
+	}
+	core.InitGpio(g)
 	api.New(daemonSocket, mainEvents)
 
 	core.LoadState()
