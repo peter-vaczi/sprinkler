@@ -172,9 +172,64 @@ func TestEventloopAddDelDeviceToProgram(t *testing.T) {
 	sendReceive(t, msg, nil)
 	sendReceive(t, msg, nil)
 	sendReceive(t, msg, core.OutOfRange)
+
+	// cleanup
+	msg = core.MsgProgramDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "pr1"}
+	sendReceive(t, msg, nil)
+	msg = core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "dev1"}
+	sendReceive(t, msg, nil)
+	msg = core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "dev2"}
+	sendReceive(t, msg, nil)
 }
 
-// func TestEventloopStartStopProgram(t *testing.T) {
-// 	var msg interface{}
-// 	var body interface{}
-// }
+func TestEventloopStartStopProgram(t *testing.T) {
+	var msg interface{}
+
+	// add one device
+	d1 := &core.Device{Name: "dev1", Pin: 1}
+	msg = core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: responses}, Device: d1}
+	sendReceive(t, msg, nil)
+
+	d2 := &core.Device{Name: "dev2", Pin: 2}
+	msg = core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: responses}, Device: d2}
+	sendReceive(t, msg, nil)
+
+	// create one program
+	pr := &core.Program{Name: "pr1"}
+	msg = core.MsgProgramCreate{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: pr}
+	sendReceive(t, msg, nil)
+
+	// add dev1 to pr
+	msg = core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Device: "dev1", Duration: 1 * time.Second}
+	sendReceive(t, msg, nil)
+
+	// add dev2 to pr
+	msg = core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Device: "dev2", Duration: 1 * time.Second}
+	sendReceive(t, msg, nil)
+
+	// start pr
+	msg = core.MsgProgramStart{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "pr-unknown"}
+	sendReceive(t, msg, core.NotFound)
+	msg = core.MsgProgramStart{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "pr1"}
+	sendReceive(t, msg, nil)
+	time.Sleep(100 * time.Millisecond)
+	assert.True(t, d1.IsOn())
+	assert.False(t, d2.IsOn())
+
+	// stop pr
+	msg = core.MsgProgramStop{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "pr-unknown"}
+	sendReceive(t, msg, core.NotFound)
+	msg = core.MsgProgramStop{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "pr1"}
+	sendReceive(t, msg, nil)
+	time.Sleep(100 * time.Millisecond)
+	assert.False(t, d1.IsOn())
+	assert.False(t, d2.IsOn())
+
+	// cleanup
+	msg = core.MsgProgramDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "pr1"}
+	sendReceive(t, msg, nil)
+	msg = core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "dev1"}
+	sendReceive(t, msg, nil)
+	msg = core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "dev2"}
+	sendReceive(t, msg, nil)
+}
