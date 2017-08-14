@@ -10,6 +10,7 @@ install:
 
 test:
 	go test -cover -coverprofile cover.core.out $(FULL)/core
+	go tool cover -func cover.core.out
 
 build.arm:
 	GOARCH=arm GOOS=linux go build $(FULL)

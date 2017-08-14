@@ -3,6 +3,7 @@ package core_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/peter.vaczi/sprinklerd/core"
 	"github.com/stretchr/testify/assert"
@@ -113,3 +114,67 @@ func TestEventloopAddDelProgram(t *testing.T) {
 	body = sendReceive(t, msg, core.NotFound)
 	assert.Empty(t, body)
 }
+
+func TestEventloopAddDelDeviceToProgram(t *testing.T) {
+	var msg interface{}
+
+	// add one device
+	d1 := &core.Device{Name: "dev1", Pin: 1}
+	msg = core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: responses}, Device: d1}
+	sendReceive(t, msg, nil)
+
+	d2 := &core.Device{Name: "dev2", Pin: 2}
+	msg = core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: responses}, Device: d2}
+	sendReceive(t, msg, nil)
+
+	// create one program
+	pr := &core.Program{Name: "pr1"}
+	msg = core.MsgProgramCreate{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: pr}
+	sendReceive(t, msg, nil)
+
+	// add dev1 to pr
+	msg = core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Device: "dev1", Duration: 5 * time.Second}
+	sendReceive(t, msg, nil)
+
+	// add dev2 to pr
+	msg = core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Device: "dev2", Duration: 8 * time.Second}
+	sendReceive(t, msg, nil)
+
+	// add unknown dev to pr
+	msg = core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Device: "dev-whatever", Duration: 5 * time.Second}
+	sendReceive(t, msg, core.NotFound)
+
+	// add dev1 to unknown pr
+	msg = core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr-whatever", Device: "dev1", Duration: 5 * time.Second}
+	sendReceive(t, msg, core.NotFound)
+
+	msg = core.MsgProgramList{MsgRequest: core.MsgRequest{ResponseChan: responses}}
+	body := sendReceive(t, msg, nil)
+	if assert.NotEmpty(t, body) {
+		if assert.IsType(t, &core.Programs{}, body) {
+			p, _ := body.(*core.Programs).Get("pr1")
+			if assert.NotNil(t, p) {
+				assert.Equal(t, len(p.Elements), 2)
+				assert.Equal(t, p.Elements[0].Device, d1)
+				assert.Equal(t, p.Elements[0].Duration, 5*time.Second)
+				assert.Equal(t, p.Elements[1].Device, d2)
+				assert.Equal(t, p.Elements[1].Duration, 8*time.Second)
+			}
+		}
+	}
+
+	// delete unknown index
+	msg = core.MsgProgramDelDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Idx: 2}
+	sendReceive(t, msg, core.OutOfRange)
+
+	// delete all
+	msg = core.MsgProgramDelDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Idx: 0}
+	sendReceive(t, msg, nil)
+	sendReceive(t, msg, nil)
+	sendReceive(t, msg, core.OutOfRange)
+}
+
+// func TestEventloopStartStopProgram(t *testing.T) {
+// 	var msg interface{}
+// 	var body interface{}
+// }
