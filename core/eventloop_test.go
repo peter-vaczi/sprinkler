@@ -2,6 +2,8 @@ package core_test
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -264,4 +266,42 @@ func TestEventloopStartStopProgram(t *testing.T) {
 	sendReceive(t, msg, nil)
 	msg = core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "dev2"}
 	sendReceive(t, msg, nil)
+}
+
+func TestEventloopLoadStore(t *testing.T) {
+	var msg interface{}
+	var body interface{}
+
+	core.DataFile = "file-not-found.json"
+	core.LoadState()
+
+	// read all devices (empty list)
+	msg = core.MsgDeviceList{MsgRequest: core.MsgRequest{ResponseChan: responses}}
+	body = sendReceive(t, msg, nil)
+	if assert.NotEmpty(t, body) {
+		if assert.IsType(t, &core.Devices{}, body) {
+			assert.Equal(t, 0, len(*body.(*core.Devices)))
+		}
+	}
+
+	core.DataFile = "data_test.json"
+	core.LoadState()
+
+	// read all devices (list of five)
+	msg = core.MsgDeviceList{MsgRequest: core.MsgRequest{ResponseChan: responses}}
+	body = sendReceive(t, msg, nil)
+	if assert.NotEmpty(t, body) {
+		if assert.IsType(t, &core.Devices{}, body) {
+			assert.Equal(t, 5, len(*body.(*core.Devices)))
+		}
+	}
+
+	core.DataFile = "data_test2.json"
+	core.StoreState()
+
+	str1, _ := ioutil.ReadFile("data_test.json")
+	str2, _ := ioutil.ReadFile("data_test2.json")
+
+	os.Remove("data_test2.json")
+	assert.Equal(t, str1, str2)
 }

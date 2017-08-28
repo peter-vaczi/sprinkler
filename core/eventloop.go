@@ -17,7 +17,7 @@ type Data struct {
 
 var data Data
 
-const DataFile = "/var/lib/sprinkler.data"
+var DataFile = "/var/lib/sprinkler.data"
 
 func init() {
 	data = Data{Devices: NewDevices(),
