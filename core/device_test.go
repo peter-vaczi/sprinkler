@@ -41,6 +41,16 @@ func TestDevice(t *testing.T) {
 	assert.NotNil(t, p)
 	assert.True(t, p.high)
 	assert.True(t, dev.IsOn())
+
+	dev.SetOnIsLow(true)
+	p, _ = gpioStub.pins[13]
+	dev.TurnOff()
+	assert.False(t, dev.IsOn())
+	assert.True(t, p.high)
+
+	dev.TurnOn()
+	assert.True(t, dev.IsOn())
+	assert.False(t, p.high)
 }
 
 func TestDevices(t *testing.T) {

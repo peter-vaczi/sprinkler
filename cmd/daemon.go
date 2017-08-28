@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -34,6 +35,6 @@ func runDaemon() {
 	api.New(daemonSocket, mainEvents)
 
 	core.LoadState()
-	core.Run(mainEvents)
+	core.Run(context.TODO(), mainEvents)
 	core.StoreState()
 }

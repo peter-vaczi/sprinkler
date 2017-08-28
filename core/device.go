@@ -18,10 +18,11 @@ func InitGpio(g gpio.Gpio) {
 }
 
 type Device struct {
-	Name string `json:"name"`
-	On   bool   `json:"on"`
-	Pin  int    `json:"pin"`
-	pin  gpio.Pin
+	Name        string `json:"name"`
+	On          bool   `json:"on"`
+	SwitchOnLow bool   `json:"switch-on-low"`
+	Pin         int    `json:"pin"`
+	pin         gpio.Pin
 }
 
 type Devices map[string]*Device
@@ -76,13 +77,21 @@ func (d *Device) SetPin(pin int) {
 
 func (d *Device) TurnOn() {
 	d.On = true
-	d.pin.High()
+	if d.SwitchOnLow {
+		d.pin.Low()
+	} else {
+		d.pin.High()
+	}
 	log.Printf("device %s is on", d.Name)
 }
 
 func (d *Device) TurnOff() {
 	d.On = false
-	d.pin.Low()
+	if d.SwitchOnLow {
+		d.pin.High()
+	} else {
+		d.pin.Low()
+	}
 	log.Printf("device %s is off", d.Name)
 }
 
@@ -93,6 +102,10 @@ func (d *Device) SetState(pin int, on bool) {
 	} else {
 		d.TurnOff()
 	}
+}
+
+func (d *Device) SetOnIsLow(val bool) {
+	d.SwitchOnLow = val
 }
 
 func (d *Device) Init() {
