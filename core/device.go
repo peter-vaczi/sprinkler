@@ -10,6 +10,7 @@ import (
 var (
 	AlreadyExists = errors.New("Already exists")
 	NotFound      = errors.New("Not found")
+	DeviceInUse   = errors.New("Device is in use")
 	gpioLib       gpio.Gpio
 )
 

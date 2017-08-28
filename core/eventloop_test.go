@@ -182,6 +182,38 @@ func TestEventloopAddDelDeviceToProgram(t *testing.T) {
 	sendReceive(t, msg, nil)
 }
 
+func TestEventloopDelDeviceInUse(t *testing.T) {
+	var msg interface{}
+
+	// add one device
+	d1 := &core.Device{Name: "dev1", Pin: 1}
+	msg = core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: responses}, Device: d1}
+	sendReceive(t, msg, nil)
+
+	// create one program
+	pr := &core.Program{Name: "pr1"}
+	msg = core.MsgProgramCreate{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: pr}
+	sendReceive(t, msg, nil)
+
+	// add dev1 to pr
+	msg = core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Device: "dev1", Duration: 5 * time.Second}
+	sendReceive(t, msg, nil)
+
+	// delete dev1
+	msg = core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "dev1"}
+	sendReceive(t, msg, core.DeviceInUse)
+
+	// delete all
+	msg = core.MsgProgramDelDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: "pr1", Idx: 0}
+	sendReceive(t, msg, nil)
+	msg = core.MsgProgramDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "pr1"}
+	sendReceive(t, msg, nil)
+
+	// delete dev1
+	msg = core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: "dev1"}
+	sendReceive(t, msg, nil)
+}
+
 func TestEventloopStartStopProgram(t *testing.T) {
 	var msg interface{}
 

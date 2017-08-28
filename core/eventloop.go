@@ -94,6 +94,14 @@ func handleEvent(event interface{}) {
 		dev, err := data.Devices.Get(event.Name)
 		event.ResponseChan <- MsgResponse{Error: err, Body: dev}
 	case MsgDeviceDel:
+		for _, pr := range *data.Programs {
+			for _, e := range pr.Elements {
+				if e.DeviceName == event.Name {
+					event.ResponseChan <- MsgResponse{Error: DeviceInUse}
+					return
+				}
+			}
+		}
 		err := data.Devices.Del(event.Name)
 		event.ResponseChan <- MsgResponse{Error: err}
 	case MsgDeviceSet:
