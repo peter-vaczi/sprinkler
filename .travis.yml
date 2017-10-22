@@ -1,0 +1,14 @@
+language: go
+
+go:
+  - 1.8.x
+  - master
+
+before_script:
+  - go get github.com/Masterminds/glide
+  - make vendorinstall
+
+script:
+  - make build
+  - make test
+
