@@ -5,13 +5,13 @@ OPTS=-s http://$(ADDR):8000
 all: build test
 
 build:
-	go build -v $(FULL)
+	go build -v
 
 install:
 	go install -v $(FULL)
 
 test:
-	go test -v $(FULL)/core
+	go test -v ./core
 
 cover:
 	go test -cover -coverprofile cover.core.out $(FULL)/core
