@@ -13,6 +13,7 @@ test:
 
 cover:
 	go tool cover -func cover.core.out
+	go tool cover -html cover.core.out -o cover.core.html
 
 build.arm:
 	GOARCH=arm GOOS=linux go build $(FULL)

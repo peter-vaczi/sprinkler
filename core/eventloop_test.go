@@ -35,6 +35,13 @@ func addDevice(t *testing.T, name string, pin int, err error) *core.Device {
 	return dev
 }
 
+func setDevice(t *testing.T, name string, dev *core.Device, err error) *core.Device {
+	msg := core.MsgDeviceSet{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name, Device: dev}
+	body := sendReceive(t, msg, err)
+	assert.Empty(t, body)
+	return dev
+}
+
 func getDevice(t *testing.T, name string, err error) *core.Device {
 	msg := core.MsgDeviceGet{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name}
 	body := sendReceive(t, msg, err)
@@ -139,6 +146,12 @@ func TestEventloopAddDelDevice(t *testing.T) {
 	dev := getDevice(t, "dev1", nil)
 	assert.Equal(t, 1, dev.Pin)
 
+	dev.Pin = 42
+	setDevice(t, "dev1", dev, nil)
+
+	dev = getDevice(t, "dev1", nil)
+	assert.Equal(t, 42, dev.Pin)
+
 	getDevice(t, "unknown-device", core.NotFound)
 
 	devs := listDevices(t)
@@ -199,6 +212,8 @@ func TestEventloopAddDelDeviceToProgram(t *testing.T) {
 	delProgram(t, "pr1", nil)
 	delDevice(t, "dev1", nil)
 	delDevice(t, "dev2", nil)
+
+	prDelDev(t, "pr1", 2, core.NotFound)
 }
 
 func TestEventloopDelDeviceInUse(t *testing.T) {
@@ -245,12 +260,35 @@ func TestEventloopStartStopProgram(t *testing.T) {
 }
 
 func TestEventloopLoadStore(t *testing.T) {
+	// file not found
 	core.DataFile = "file-not-found.json"
 	core.LoadState()
 
 	devs := listDevices(t)
 	assert.Equal(t, 0, len(*devs))
 
+	// permission denied
+	core.DataFile = "/etc/shadow"
+	core.LoadState()
+
+	devs = listDevices(t)
+	assert.Equal(t, 0, len(*devs))
+
+	// program refere to an no-existent device
+	core.DataFile = "invalid-data1.json"
+	core.LoadState()
+
+	devs = listDevices(t)
+	assert.Equal(t, 0, len(*devs))
+
+	// missing closing brace
+	core.DataFile = "invalid-data2.json"
+	core.LoadState()
+
+	devs = listDevices(t)
+	assert.Equal(t, 0, len(*devs))
+
+	// valid data
 	core.DataFile = "data_test.json"
 	core.LoadState()
 

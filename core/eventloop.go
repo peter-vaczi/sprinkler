@@ -28,7 +28,7 @@ func init() {
 func LoadState() {
 	file, err := os.Open(DataFile)
 	if err != nil {
-		if err == os.ErrNotExist {
+		if os.IsNotExist(err) {
 			return
 		}
 		log.Printf("failed to open data file: %v", err)
@@ -52,6 +52,7 @@ func LoadState() {
 			elem.Device, err = data.Devices.Get(elem.DeviceName)
 			if err != nil {
 				log.Printf("invalid data file, device %s not found", elem.DeviceName)
+				data = Data{Devices: NewDevices(), Programs: NewPrograms()}
 				return
 			}
 		}
