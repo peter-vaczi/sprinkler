@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/peter.vaczi/sprinklerd/core"
+	"github.com/peter-vaczi/sprinklerd/core"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/peter.vaczi/sprinklerd/core"
-	"github.com/peter.vaczi/sprinklerd/utils"
+	"github.com/peter-vaczi/sprinklerd/core"
+	"github.com/peter-vaczi/sprinklerd/utils"
 	"github.com/spf13/cobra"
 )
 
