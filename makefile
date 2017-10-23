@@ -1,4 +1,4 @@
-FULL=github.com/peter.vaczi/sprinklerd
+FULL=github.com/peter-vaczi/sprinklerd
 ADDR=192.168.0.168
 OPTS=-s http://$(ADDR):8000
 

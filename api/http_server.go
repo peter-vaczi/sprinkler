@@ -11,8 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/peter.vaczi/sprinklerd/core"
-	"github.com/peter.vaczi/sprinklerd/utils"
+	"github.com/peter-vaczi/sprinklerd/core"
+	"github.com/peter-vaczi/sprinklerd/utils"
 )
 
 // API represents the http rest api of sprinklerd

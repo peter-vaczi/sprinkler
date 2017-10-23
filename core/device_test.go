@@ -3,7 +3,7 @@ package core_test
 import (
 	"testing"
 
-	"github.com/peter.vaczi/sprinklerd/core"
+	"github.com/peter-vaczi/sprinklerd/core"
 	"github.com/stretchr/testify/assert"
 )
 
