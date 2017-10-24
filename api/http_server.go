@@ -17,6 +17,8 @@ import (
 
 // API represents the http rest api of sprinklerd
 type API interface {
+	Run()
+	ServeHTTP(http.ResponseWriter, *http.Request)
 	Close()
 }
 
@@ -51,7 +53,6 @@ func New(daemonSocket string, eventChan chan interface{}) API {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	go srv.run()
 	return srv
 }
 
@@ -61,8 +62,12 @@ type httpServer struct {
 	eventChan chan interface{}
 }
 
-func (s *httpServer) run() {
+func (s *httpServer) Run() {
 	log.Fatal(s.server.ListenAndServe())
+}
+
+func (s *httpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.router.ServeHTTP(w, r)
 }
 
 func (s *httpServer) Close() {
@@ -200,13 +205,17 @@ func (s *httpServer) delDeviceFromProgram(w http.ResponseWriter, r *http.Request
 func (s *httpServer) handleResponse(w http.ResponseWriter, r *http.Request, rch chan core.MsgResponse) {
 	resp := <-rch
 
-	if resp.Error == nil {
+	switch resp.Error {
+	case nil:
 		log.Printf("%s %s -> %s ", r.Method, r.URL, "200 OK")
 		if resp.Body != nil {
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprint(w, utils.EncodeJson(resp.Body))
 		}
-	} else {
+	case core.NotFound:
+		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
+		http.Error(w, resp.Error.Error(), http.StatusNotFound)
+	default:
 		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
 		http.Error(w, resp.Error.Error(), http.StatusInternalServerError)
 	}

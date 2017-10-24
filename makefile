@@ -11,12 +11,16 @@ install:
 	go install -v $(FULL)
 
 test:
-	go test -v ./core
+	go test -v $(FULL)/core
+	go test -v $(FULL)/api
 
 cover:
 	go test -cover -coverprofile cover.core.out $(FULL)/core
 	go tool cover -func cover.core.out
 	go tool cover -html cover.core.out -o cover.core.html
+	go test -cover -coverprofile cover.api.out $(FULL)/api
+	go tool cover -func cover.api.out
+	go tool cover -html cover.api.out -o cover.api.html
 
 vendorinstall:
 	glide install

@@ -32,7 +32,8 @@ func runDaemon() {
 		log.Fatalf("failed to initialize the gpio library: %v", err)
 	}
 	core.InitGpio(g)
-	api.New(daemonSocket, mainEvents)
+	api := api.New(daemonSocket, mainEvents)
+	go api.Run()
 
 	core.LoadState()
 	core.Run(context.TODO(), mainEvents)
