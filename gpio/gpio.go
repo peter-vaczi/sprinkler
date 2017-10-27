@@ -2,6 +2,8 @@ package gpio
 
 import rpio "github.com/stianeikeland/go-rpio"
 
+//https://periph.io
+
 type Gpio interface {
 	NewPin(p int) Pin
 }

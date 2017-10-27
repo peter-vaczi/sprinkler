@@ -115,7 +115,9 @@ func (s *httpServer) setDevice(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 
 	dev := &core.Device{}
+	log.Printf("before parse")
 	err := json.NewDecoder(r.Body).Decode(dev)
+	log.Printf("after parse %v", err)
 	if err == nil {
 		s.eventChan <- core.MsgDeviceSet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name, Device: dev}
 	} else {
@@ -215,6 +217,15 @@ func (s *httpServer) handleResponse(w http.ResponseWriter, r *http.Request, rch 
 	case core.NotFound:
 		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
 		http.Error(w, resp.Error.Error(), http.StatusNotFound)
+	case core.OutOfRange:
+		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
+		http.Error(w, resp.Error.Error(), http.StatusNotFound)
+	case core.AlreadyExists:
+		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
+		http.Error(w, resp.Error.Error(), http.StatusNotAcceptable)
+	case core.DeviceInUse:
+		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
+		http.Error(w, resp.Error.Error(), http.StatusNotAcceptable)
 	default:
 		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
 		http.Error(w, resp.Error.Error(), http.StatusInternalServerError)
