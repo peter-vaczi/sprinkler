@@ -1,12 +1,12 @@
-hash: 59d2ccb58a411ce73ffcefdaff09d61af6a5af0b2cb94c37d69f96ad2ae276f1
-updated: 2017-10-23T20:25:09.795376867+02:00
+hash: 0dba4844b033221aff69238807e775c2ecf83df9dca3ad44ec6642b55db36c7a
+updated: 2017-11-08T22:49:36.874163611+01:00
 imports:
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 24fca303ac6da784b9e8269f724ddeb0b2eea5e7
+  version: 7f08801859139f86dfafd1c296e2cba9a80d292e
 - name: github.com/hashicorp/hcl
   version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
   subpackages:
@@ -30,14 +30,8 @@ imports:
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
   version: 5c26a6ff6fd178719e15decac1c8196da0d7d6d1
-- name: github.com/peter-vaczi/sprinklerd
-  version: a9fff59fe8a5e25d74ebafea97fdfcacb37fb2b3
-  subpackages:
-  - api
-  - cmd
-  - core
-  - gpio
-  - utils
+- name: github.com/robfig/cron
+  version: 2315d5715e36303a941d907f038da7f7c44c773b
 - name: github.com/spf13/afero
   version: 9be650865eab0c12963d8753212f4f9c66cdcf12
   subpackages:

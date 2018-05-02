@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/peter-vaczi/sprinklerd/utils"
+	"github.com/peter-vaczi/sprinkler/utils"
 	"github.com/spf13/cobra"
 )
 

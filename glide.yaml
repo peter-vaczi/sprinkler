@@ -11,3 +11,5 @@ import:
   version: ^1.1.4
   subpackages:
   - assert
+- package: github.com/robfig/cron
+  version: 2315d5715e36303a941d907f038da7f7c44c773b

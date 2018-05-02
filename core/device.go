@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 
-	"github.com/peter-vaczi/sprinklerd/gpio"
+	"github.com/peter-vaczi/sprinkler/gpio"
 )
 
 var (

@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/peter-vaczi/sprinklerd/api"
-	"github.com/peter-vaczi/sprinklerd/core"
-	"github.com/peter-vaczi/sprinklerd/gpio"
+	"github.com/peter-vaczi/sprinkler/api"
+	"github.com/peter-vaczi/sprinkler/core"
+	"github.com/peter-vaczi/sprinkler/gpio"
 )
 
 // daemonCmd represents the daemon command

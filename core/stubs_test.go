@@ -1,6 +1,6 @@
 package core_test
 
-import "github.com/peter-vaczi/sprinklerd/gpio"
+import "github.com/peter-vaczi/sprinkler/gpio"
 
 type GpioStub struct {
 	pins map[int]*PinStub

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/peter-vaczi/sprinklerd/api"
-	"github.com/peter-vaczi/sprinklerd/core"
+	"github.com/peter-vaczi/sprinkler/api"
+	"github.com/peter-vaczi/sprinkler/core"
 	"github.com/stretchr/testify/assert"
 )
 

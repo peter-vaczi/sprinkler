@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/peter-vaczi/sprinklerd/core"
-	"github.com/peter-vaczi/sprinklerd/utils"
+	"github.com/peter-vaczi/sprinkler/core"
+	"github.com/peter-vaczi/sprinkler/utils"
 )
 
 var deviceStatusCmd = &cobra.Command{

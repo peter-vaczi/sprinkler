@@ -11,11 +11,11 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/peter-vaczi/sprinklerd/core"
-	"github.com/peter-vaczi/sprinklerd/utils"
+	"github.com/peter-vaczi/sprinkler/core"
+	"github.com/peter-vaczi/sprinkler/utils"
 )
 
-// API represents the http rest api of sprinklerd
+// API represents the http rest api of sprinkler
 type API interface {
 	Run()
 	ServeHTTP(http.ResponseWriter, *http.Request)
