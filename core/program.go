@@ -18,6 +18,7 @@ type Program struct {
 	Elements []*ProgramElement `json:"elements"`
 	ctx      context.Context
 	cancel   context.CancelFunc
+	running  bool
 }
 
 type Programs map[string]*Program
@@ -80,28 +81,37 @@ func (p *Program) Reset() {
 }
 
 func (p *Program) Start() {
-	p.ctx, p.cancel = context.WithCancel(context.Background())
-	go func() {
-		log.Printf("program %s is started", p.Name)
-
-		for _, elem := range p.Elements {
-			elem.Device.TurnOn()
-
-			t := time.NewTimer(elem.Duration)
-			select {
-			case <-p.ctx.Done():
-				log.Printf("program %s is canceled", p.Name)
-				return
-			case <-t.C:
-				// do nothing
-			}
-			elem.Device.TurnOff()
-			time.Sleep(1 * time.Second)
-		}
-		log.Printf("program %s is finished", p.Name)
-	}()
+	if !p.running {
+		p.ctx, p.cancel = context.WithCancel(context.Background())
+		go p.run()
+	}
 }
 
 func (p *Program) Stop() {
-	p.Reset()
+	if p.running {
+		p.Reset()
+	}
+}
+
+func (p *Program) run() {
+	p.running = true
+	defer func() { p.running = false }()
+
+	log.Printf("program %s is started", p.Name)
+
+	for _, elem := range p.Elements {
+		elem.Device.TurnOn()
+
+		t := time.NewTimer(elem.Duration)
+		select {
+		case <-p.ctx.Done():
+			log.Printf("program %s is canceled", p.Name)
+			return
+		case <-t.C:
+			// do nothing
+		}
+		elem.Device.TurnOff()
+		time.Sleep(1 * time.Second)
+	}
+	log.Printf("program %s is finished", p.Name)
 }
