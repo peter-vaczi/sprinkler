@@ -27,6 +27,7 @@ func init() {
 }
 
 func jsonContains(t *testing.T, a, b string) {
+	t.Helper()
 	ma := make(map[string]interface{})
 	mb := make(map[string]interface{})
 	err := json.NewDecoder(strings.NewReader(a)).Decode(&ma)
@@ -50,12 +51,13 @@ func jsonContains(t *testing.T, a, b string) {
 			jb, _ := json.Marshal(v)
 			jsonContains(t, string(ja), string(jb))
 		default:
-			assert.Equal(t, value, v)
+			assert.Equal(t, v, value)
 		}
 	}
 }
 
 func req(t *testing.T, method, path, body string, expStatus int, expBody string) {
+	t.Helper()
 	var req *http.Request
 	if len(body) == 0 {
 		req = httptest.NewRequest(method, path, nil)
@@ -116,7 +118,7 @@ func TestApiAddDelDeviceToProgram(t *testing.T) {
 	req(t, "POST", "/v1/programs/pr1/devices", "{\"device\":\"dev-whatever\", \"duration\":\"5s\"}", 404, "Not found")
 	req(t, "POST", "/v1/programs/pr-whatever/devices", "{\"device\":\"dev1\", \"duration\":\"5s\"}", 404, "Not found")
 
-	req(t, "GET", "/v1/programs", "", 200, "{\"pr1\":{\"name\":\"pr1\", \"elements\":[{\"device\":\"dev1\",\"duration\":5000000000},{\"device\":\"dev2\",\"duration\":8000000000}]}}")
+	req(t, "GET", "/v1/programs", "", 200, "{\"pr1\":{\"name\":\"pr1\", \"devices\":[{\"device\":\"dev1\",\"duration\":5000000000},{\"device\":\"dev2\",\"duration\":8000000000}]}}")
 
 	req(t, "DELETE", "/v1/programs/2", "", 404, "Not found")
 
@@ -171,6 +173,23 @@ func TestApiStartStopProgram(t *testing.T) {
 	req(t, "DELETE", "/v1/programs/pr1", "", 200, "")
 	req(t, "DELETE", "/v1/devices/dev1", "", 200, "")
 	req(t, "DELETE", "/v1/devices/dev2", "", 200, "")
+}
+
+func TestApiAddDelSchedule(t *testing.T) {
+	req(t, "POST", "/v1/schedules", "{\"name\":\"sc1\", \"spec\":\"* * * * *\"}", 200, "")
+	req(t, "POST", "/v1/schedules", "{\"name\":\"sc1\", \"spec\":\"* * * * *\"}", 406, "Already exists")
+	req(t, "GET", "/v1/schedules/sc1", "", 200, "{\"name\":\"sc1\", \"spec\":\"* * * * *\"}")
+
+	req(t, "PUT", "/v1/schedules/sc1", "{\"spec\":\"4 4 4 4 *\"}", 200, "")
+	req(t, "GET", "/v1/schedules/sc1", "", 200, "{\"name\":\"sc1\", \"spec\":\"4 4 4 4 *\"}")
+	req(t, "GET", "/v1/schedules", "", 200, "{\"sc1\":{\"name\":\"sc1\", \"spec\":\"4 4 4 4 *\"}}")
+
+	req(t, "POST", "/v1/programs", "{\"name\":\"pr1\"}", 200, "")
+	req(t, "PUT", "/v1/schedules/sc1", "{\"spec\":\"4 4 4 4 *\", \"program\":\"pr1\"}", 200, "")
+	req(t, "GET", "/v1/schedules/sc1", "", 200, "{\"name\":\"sc1\", \"spec\":\"4 4 4 4 *\", \"program\":\"pr1\"}")
+
+	req(t, "DELETE", "/v1/schedules/sc1", "", 200, "")
+	req(t, "GET", "/v1/schedules/sc1", "", 404, "Not found")
 }
 
 // func TestApiBadRequests(t *testing.T) {

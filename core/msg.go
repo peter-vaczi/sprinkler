@@ -77,3 +77,28 @@ type MsgProgramDelDevice struct {
 	Program string
 	Idx     int
 }
+
+type MsgScheduleList struct {
+	MsgRequest
+}
+
+type MsgScheduleCreate struct {
+	MsgRequest
+	Schedule *Schedule
+}
+
+type MsgScheduleGet struct {
+	MsgRequest
+	Name string
+}
+
+type MsgScheduleDel struct {
+	MsgRequest
+	Name string
+}
+
+type MsgScheduleSet struct {
+	MsgRequest
+	Name     string
+	Schedule *Schedule
+}

@@ -15,7 +15,7 @@ type ProgramElement struct {
 
 type Program struct {
 	Name     string            `json:"name"`
-	Elements []*ProgramElement `json:"elements"`
+	Elements []*ProgramElement `json:"devices"`
 	ctx      context.Context
 	cancel   context.CancelFunc
 	running  bool

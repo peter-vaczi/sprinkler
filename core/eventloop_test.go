@@ -14,6 +14,7 @@ import (
 var responses = make(chan core.MsgResponse)
 
 func sendReceive(t *testing.T, msg interface{}, err error) interface{} {
+	t.Helper()
 	events := make(chan interface{})
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -28,6 +29,7 @@ func sendReceive(t *testing.T, msg interface{}, err error) interface{} {
 }
 
 func addDevice(t *testing.T, name string, pin int, err error) *core.Device {
+	t.Helper()
 	dev := &core.Device{Name: name, Pin: pin}
 	msg := core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: responses}, Device: dev}
 	body := sendReceive(t, msg, err)
@@ -36,6 +38,7 @@ func addDevice(t *testing.T, name string, pin int, err error) *core.Device {
 }
 
 func setDevice(t *testing.T, name string, dev *core.Device, err error) *core.Device {
+	t.Helper()
 	msg := core.MsgDeviceSet{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name, Device: dev}
 	body := sendReceive(t, msg, err)
 	assert.Empty(t, body)
@@ -43,6 +46,7 @@ func setDevice(t *testing.T, name string, dev *core.Device, err error) *core.Dev
 }
 
 func getDevice(t *testing.T, name string, err error) *core.Device {
+	t.Helper()
 	msg := core.MsgDeviceGet{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name}
 	body := sendReceive(t, msg, err)
 
@@ -60,12 +64,14 @@ func getDevice(t *testing.T, name string, err error) *core.Device {
 }
 
 func delDevice(t *testing.T, name string, err error) {
+	t.Helper()
 	msg := core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name}
 	body := sendReceive(t, msg, err)
 	assert.Empty(t, body)
 }
 
 func listDevices(t *testing.T) *core.Devices {
+	t.Helper()
 	msg := core.MsgDeviceList{MsgRequest: core.MsgRequest{ResponseChan: responses}}
 	body := sendReceive(t, msg, nil)
 
@@ -78,6 +84,7 @@ func listDevices(t *testing.T) *core.Devices {
 }
 
 func addProgram(t *testing.T, name string, err error) *core.Program {
+	t.Helper()
 	pr := &core.Program{Name: name}
 	msg := core.MsgProgramCreate{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: pr}
 	body := sendReceive(t, msg, err)
@@ -86,6 +93,7 @@ func addProgram(t *testing.T, name string, err error) *core.Program {
 }
 
 func getProgram(t *testing.T, name string, err error) *core.Program {
+	t.Helper()
 	msg := core.MsgProgramGet{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name}
 	body := sendReceive(t, msg, err)
 
@@ -103,12 +111,14 @@ func getProgram(t *testing.T, name string, err error) *core.Program {
 }
 
 func delProgram(t *testing.T, name string, err error) {
+	t.Helper()
 	msg := core.MsgProgramDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name}
 	body := sendReceive(t, msg, err)
 	assert.Empty(t, body)
 }
 
 func listPrograms(t *testing.T) *core.Programs {
+	t.Helper()
 	msg := core.MsgProgramList{MsgRequest: core.MsgRequest{ResponseChan: responses}}
 	body := sendReceive(t, msg, nil)
 
@@ -121,23 +131,82 @@ func listPrograms(t *testing.T) *core.Programs {
 }
 
 func prAddDev(t *testing.T, pr string, dev string, dur time.Duration, err error) {
+	t.Helper()
 	msg := core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: pr, Device: dev, Duration: dur}
 	sendReceive(t, msg, err)
 }
 
 func prDelDev(t *testing.T, pr string, idx int, err error) {
+	t.Helper()
 	msg := core.MsgProgramDelDevice{MsgRequest: core.MsgRequest{ResponseChan: responses}, Program: pr, Idx: idx}
 	sendReceive(t, msg, err)
 }
 
 func startProgram(t *testing.T, pr string, err error) {
+	t.Helper()
 	msg := core.MsgProgramStart{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: pr}
 	sendReceive(t, msg, err)
 }
 
 func stopProgram(t *testing.T, pr string, err error) {
+	t.Helper()
 	msg := core.MsgProgramStop{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: pr}
 	sendReceive(t, msg, err)
+}
+
+func addSchedule(t *testing.T, name string, spec string, err error) *core.Schedule {
+	t.Helper()
+	sc := &core.Schedule{Name: name, Spec: spec}
+	msg := core.MsgScheduleCreate{MsgRequest: core.MsgRequest{ResponseChan: responses}, Schedule: sc}
+	body := sendReceive(t, msg, err)
+	assert.Empty(t, body)
+	return sc
+}
+
+func setSchedule(t *testing.T, name string, sc *core.Schedule, err error) *core.Schedule {
+	t.Helper()
+	msg := core.MsgScheduleSet{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name, Schedule: sc}
+	body := sendReceive(t, msg, err)
+	assert.Empty(t, body)
+	return sc
+}
+
+func getSchedule(t *testing.T, name string, err error) *core.Schedule {
+	t.Helper()
+	msg := core.MsgScheduleGet{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name}
+	body := sendReceive(t, msg, err)
+
+	if err != nil {
+		assert.Empty(t, body)
+		return nil
+	}
+
+	if assert.NotEmpty(t, body) {
+		if assert.IsType(t, &core.Schedule{}, body) {
+			return body.(*core.Schedule)
+		}
+	}
+	return nil
+}
+
+func delSchedule(t *testing.T, name string, err error) {
+	t.Helper()
+	msg := core.MsgScheduleDel{MsgRequest: core.MsgRequest{ResponseChan: responses}, Name: name}
+	body := sendReceive(t, msg, err)
+	assert.Empty(t, body)
+}
+
+func listSchedules(t *testing.T) *core.Schedules {
+	t.Helper()
+	msg := core.MsgScheduleList{MsgRequest: core.MsgRequest{ResponseChan: responses}}
+	body := sendReceive(t, msg, nil)
+
+	if assert.NotEmpty(t, body) {
+		if assert.IsType(t, &core.Schedules{}, body) {
+			return body.(*core.Schedules)
+		}
+	}
+	return nil
 }
 
 func TestEventloopAddDelDevice(t *testing.T) {
@@ -259,6 +328,41 @@ func TestEventloopStartStopProgram(t *testing.T) {
 	delDevice(t, "dev2", nil)
 }
 
+func TestEventloopAddDelSchedule(t *testing.T) {
+	addSchedule(t, "sc1", "1 1 1 1 *", nil)
+
+	sc := getSchedule(t, "sc1", nil)
+	assert.Equal(t, "1 1 1 1 *", sc.Spec)
+
+	sc.Spec = "2 2 2 2 *"
+	setSchedule(t, "sc1", sc, nil)
+
+	sc = getSchedule(t, "sc1", nil)
+	assert.Equal(t, "2 2 2 2 *", sc.Spec)
+	assert.Empty(t, sc.ProgramName)
+	assert.Nil(t, sc.Program)
+
+	addProgram(t, "pr1", nil)
+	sc.ProgramName = "unknown-program"
+	setSchedule(t, "sc1", sc, core.NotFound)
+	sc.ProgramName = "pr1"
+	setSchedule(t, "sc1", sc, nil)
+	sc = getSchedule(t, "sc1", nil)
+	assert.Equal(t, "pr1", sc.ProgramName)
+	assert.NotNil(t, sc.Program)
+
+	getSchedule(t, "unknown-schedule", core.NotFound)
+
+	scs := listSchedules(t)
+	assert.Equal(t, 1, len(*scs))
+	s, _ := scs.Get("sc1")
+	assert.NotNil(t, s)
+
+	delSchedule(t, "sc1", nil)
+	getSchedule(t, "sc1", core.NotFound)
+	delProgram(t, "pr1", nil)
+}
+
 func TestEventloopLoadStore(t *testing.T) {
 	// file not found
 	core.DataFile = "file-not-found.json"
@@ -274,7 +378,7 @@ func TestEventloopLoadStore(t *testing.T) {
 	devs = listDevices(t)
 	assert.Equal(t, 0, len(*devs))
 
-	// program refere to an no-existent device
+	// program refers to an no-existent device
 	core.DataFile = "invalid-data1.json"
 	core.LoadState()
 
@@ -283,6 +387,13 @@ func TestEventloopLoadStore(t *testing.T) {
 
 	// missing closing brace
 	core.DataFile = "invalid-data2.json"
+	core.LoadState()
+
+	devs = listDevices(t)
+	assert.Equal(t, 0, len(*devs))
+
+	// schedule refers to an no-existent program
+	core.DataFile = "invalid-data3.json"
 	core.LoadState()
 
 	devs = listDevices(t)

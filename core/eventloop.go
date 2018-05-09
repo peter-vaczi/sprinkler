@@ -11,8 +11,9 @@ import (
 )
 
 type Data struct {
-	Devices  *Devices  `json:"devices"`
-	Programs *Programs `json:"programs"`
+	Devices   *Devices   `json:"devices"`
+	Programs  *Programs  `json:"programs"`
+	Schedules *Schedules `json:"schedules"`
 }
 
 var data Data
@@ -21,7 +22,8 @@ var DataFile = "/var/lib/sprinkler.data"
 
 func init() {
 	data = Data{Devices: NewDevices(),
-		Programs: NewPrograms(),
+		Programs:  NewPrograms(),
+		Schedules: NewSchedules(),
 	}
 }
 
@@ -52,9 +54,19 @@ func LoadState() {
 			elem.Device, err = data.Devices.Get(elem.DeviceName)
 			if err != nil {
 				log.Printf("invalid data file, device %s not found", elem.DeviceName)
-				data = Data{Devices: NewDevices(), Programs: NewPrograms()}
+				data = Data{Devices: NewDevices(), Programs: NewPrograms(), Schedules: NewSchedules()}
 				return
 			}
+		}
+	}
+
+	// re-initialize the program pointers
+	for _, sc := range *data.Schedules {
+		sc.Program, err = data.Programs.Get(sc.ProgramName)
+		if err != nil {
+			log.Printf("invalid data file, program %s not found", sc.ProgramName)
+			data = Data{Devices: NewDevices(), Programs: NewPrograms(), Schedules: NewSchedules()}
+			return
 		}
 	}
 }
@@ -155,6 +167,28 @@ func handleEvent(event interface{}) {
 			return
 		}
 		err = prg.DelDevice(event.Idx)
+		event.ResponseChan <- MsgResponse{Error: err}
+	case MsgScheduleList:
+		event.ResponseChan <- MsgResponse{Error: nil, Body: data.Schedules}
+	case MsgScheduleCreate:
+		err := data.Schedules.Add(event.Schedule)
+		event.ResponseChan <- MsgResponse{Error: err}
+	case MsgScheduleGet:
+		sch, err := data.Schedules.Get(event.Name)
+		event.ResponseChan <- MsgResponse{Error: err, Body: sch}
+	case MsgScheduleDel:
+		err := data.Schedules.Del(event.Name)
+		event.ResponseChan <- MsgResponse{Error: err}
+	case MsgScheduleSet:
+		if 0 < len(event.Schedule.ProgramName) {
+			prg, err := data.Programs.Get(event.Schedule.ProgramName)
+			if err != nil {
+				event.ResponseChan <- MsgResponse{Error: err}
+				return
+			}
+			event.Schedule.Program = prg
+		}
+		err := data.Schedules.Set(event.Name, event.Schedule)
 		event.ResponseChan <- MsgResponse{Error: err}
 	}
 }

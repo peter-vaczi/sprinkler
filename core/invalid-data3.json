@@ -1,0 +1,4 @@
+{"devices":{"dev1":{"name":"dev1","on":false,"switch-on-low":true,"pin":9}},
+ "programs":{"pr1":{"name":"pr1","devices":[{"device":"dev1","duration":5000000000}]}},
+ "schedules":{"sc1":{"name":"sc1","spec":"* * * * *","program":"invalid"}}}
+

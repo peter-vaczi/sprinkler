@@ -45,6 +45,11 @@ func New(daemonSocket string, eventChan chan interface{}) API {
 	srv.router.HandleFunc("/v1/programs/{name}/stop", srv.stopProgram).Methods("POST")
 	srv.router.HandleFunc("/v1/programs/{name}/devices", srv.addDeviceToProgram).Methods("POST")
 	srv.router.HandleFunc("/v1/programs/{name}/devices/{idx}", srv.delDeviceFromProgram).Methods("DELETE")
+	srv.router.HandleFunc("/v1/schedules", srv.listSchedules).Methods("GET")
+	srv.router.HandleFunc("/v1/schedules", srv.createSchedule).Methods("POST")
+	srv.router.HandleFunc("/v1/schedules/{name}", srv.getSchedule).Methods("GET")
+	srv.router.HandleFunc("/v1/schedules/{name}", srv.delSchedule).Methods("DELETE")
+	srv.router.HandleFunc("/v1/schedules/{name}", srv.setSchedule).Methods("PUT")
 
 	srv.server = &http.Server{
 		Handler:      srv.router,
@@ -115,9 +120,7 @@ func (s *httpServer) setDevice(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 
 	dev := &core.Device{}
-	log.Printf("before parse")
 	err := json.NewDecoder(r.Body).Decode(dev)
-	log.Printf("after parse %v", err)
 	if err == nil {
 		s.eventChan <- core.MsgDeviceSet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name, Device: dev}
 	} else {
@@ -201,6 +204,56 @@ func (s *httpServer) delDeviceFromProgram(w http.ResponseWriter, r *http.Request
 	idx, _ := strconv.Atoi(vars["idx"])
 
 	s.eventChan <- core.MsgProgramDelDevice{MsgRequest: core.MsgRequest{ResponseChan: rch}, Program: name, Idx: idx}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) listSchedules(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan core.MsgResponse)
+	s.eventChan <- core.MsgScheduleList{MsgRequest: core.MsgRequest{ResponseChan: rch}}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) createSchedule(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan core.MsgResponse)
+
+	sch := &core.Schedule{}
+	err := json.NewDecoder(r.Body).Decode(sch)
+	if err == nil {
+		s.eventChan <- core.MsgScheduleCreate{MsgRequest: core.MsgRequest{ResponseChan: rch}, Schedule: sch}
+	} else {
+		rch <- core.MsgResponse{Error: err}
+	}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) getSchedule(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan core.MsgResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	s.eventChan <- core.MsgScheduleGet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) delSchedule(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan core.MsgResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	s.eventChan <- core.MsgScheduleDel{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
+	s.handleResponse(w, r, rch)
+}
+
+func (s *httpServer) setSchedule(w http.ResponseWriter, r *http.Request) {
+	rch := make(chan core.MsgResponse)
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	sch := &core.Schedule{}
+	err := json.NewDecoder(r.Body).Decode(sch)
+	if err == nil {
+		s.eventChan <- core.MsgScheduleSet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name, Schedule: sch}
+	} else {
+		rch <- core.MsgResponse{Error: err}
+	}
 	s.handleResponse(w, r, rch)
 }
 
