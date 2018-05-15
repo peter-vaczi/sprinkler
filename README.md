@@ -1,2 +1,2 @@
-# sprinklerd [![Build Status](https://travis-ci.org/peter-vaczi/sprinklerd.svg?branch=travis)](https://travis-ci.org/peter-vaczi/sprinklerd)
-raspberry PI operated sprinkler daemon
+# sprinkler [![Build Status](https://travis-ci.org/peter-vaczi/sprinkler.svg?branch=travis)](https://travis-ci.org/peter-vaczi/sprinkler)
+raspberry PI operated sprinkler daemon and cli
