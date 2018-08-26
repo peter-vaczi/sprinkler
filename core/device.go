@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"log"
+	"sync"
 
 	"github.com/peter-vaczi/sprinkler/gpio"
 )
@@ -24,6 +25,7 @@ type Device struct {
 	SwitchOnLow bool   `json:"switch-on-low"`
 	Pin         int    `json:"pin"`
 	pin         gpio.Pin
+	m           sync.Mutex
 }
 
 type Devices map[string]*Device
@@ -71,12 +73,18 @@ func (d *Devices) Set(name string, newDev *Device) error {
 }
 
 func (d *Device) SetPin(pin int) {
+	d.m.Lock()
+	defer d.m.Unlock()
+
 	d.Pin = pin
 	d.pin = gpioLib.NewPin(pin)
 	d.pin.Output()
 }
 
 func (d *Device) TurnOn() {
+	d.m.Lock()
+	defer d.m.Unlock()
+
 	d.On = true
 	if d.SwitchOnLow {
 		d.pin.Low()
@@ -87,6 +95,9 @@ func (d *Device) TurnOn() {
 }
 
 func (d *Device) TurnOff() {
+	d.m.Lock()
+	defer d.m.Unlock()
+
 	d.On = false
 	if d.SwitchOnLow {
 		d.pin.High()
@@ -106,6 +117,9 @@ func (d *Device) SetState(pin int, on bool) {
 }
 
 func (d *Device) SetOnIsLow(val bool) {
+	d.m.Lock()
+	defer d.m.Unlock()
+
 	d.SwitchOnLow = val
 }
 
@@ -114,5 +128,8 @@ func (d *Device) Init() {
 }
 
 func (d *Device) IsOn() bool {
+	d.m.Lock()
+	defer d.m.Unlock()
+
 	return d.On
 }

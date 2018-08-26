@@ -23,10 +23,10 @@ type API interface {
 }
 
 // New returns a new http api instance
-func New(daemonSocket string, eventChan chan interface{}) API {
+func New(daemonSocket string, data *core.Data) API {
 	srv := &httpServer{
-		router:    mux.NewRouter().StrictSlash(false),
-		eventChan: eventChan,
+		router: mux.NewRouter().StrictSlash(false),
+		data:   data,
 	}
 
 	ipPort := daemonSocket[strings.LastIndex(daemonSocket, "/")+1:]
@@ -62,9 +62,9 @@ func New(daemonSocket string, eventChan chan interface{}) API {
 }
 
 type httpServer struct {
-	router    *mux.Router
-	server    *http.Server
-	eventChan chan interface{}
+	router *mux.Router
+	server *http.Server
+	data   *core.Data
 }
 
 func (s *httpServer) Run() {
@@ -80,108 +80,97 @@ func (s *httpServer) Close() {
 }
 
 func (s *httpServer) listDevices(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
-	s.eventChan <- core.MsgDeviceList{MsgRequest: core.MsgRequest{ResponseChan: rch}}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, nil, s.data.Devices)
 }
 
 func (s *httpServer) addDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
-
 	dev := &core.Device{}
 	err := json.NewDecoder(r.Body).Decode(dev)
 	if err == nil {
-		s.eventChan <- core.MsgDeviceAdd{MsgRequest: core.MsgRequest{ResponseChan: rch}, Device: dev}
-	} else {
-		rch <- core.MsgResponse{Error: err}
+		err = s.data.Devices.Add(dev)
 	}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) getDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgDeviceGet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+	dev, err := s.data.Devices.Get(name)
+	s.sendResponse(w, r, err, dev)
 }
 
 func (s *httpServer) delDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgDeviceDel{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+
+	if s.data.Programs.IsDeviceInUse(name) {
+		s.sendResponse(w, r, core.DeviceInUse, nil)
+		return
+	}
+	err := s.data.Devices.Del(name)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) setDevice(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
 
 	dev := &core.Device{}
 	err := json.NewDecoder(r.Body).Decode(dev)
 	if err == nil {
-		s.eventChan <- core.MsgDeviceSet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name, Device: dev}
-	} else {
-		rch <- core.MsgResponse{Error: err}
+		err = s.data.Devices.Set(name, dev)
 	}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) listPrograms(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
-	s.eventChan <- core.MsgProgramList{MsgRequest: core.MsgRequest{ResponseChan: rch}}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, nil, s.data.Programs)
 }
 
 func (s *httpServer) createProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
-
 	prg := &core.Program{}
 	err := json.NewDecoder(r.Body).Decode(prg)
 	if err == nil {
-		s.eventChan <- core.MsgProgramCreate{MsgRequest: core.MsgRequest{ResponseChan: rch}, Program: prg}
-	} else {
-		rch <- core.MsgResponse{Error: err}
+		err = s.data.Programs.Add(prg)
 	}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) getProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgProgramGet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+	prg, err := s.data.Programs.Get(name)
+	s.sendResponse(w, r, err, prg)
 }
 
 func (s *httpServer) delProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgProgramDel{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+	err := s.data.Programs.Del(name)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) startProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgProgramStart{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+	prg, err := s.data.Programs.Get(name)
+	if err == nil {
+		prg.Start()
+	}
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) stopProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgProgramStop{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+	prg, err := s.data.Programs.Get(name)
+	if err == nil {
+		prg.Stop()
+	}
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) addDeviceToProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse, 1)
 	vars := mux.Vars(r)
 	name := vars["name"]
 
@@ -190,97 +179,111 @@ func (s *httpServer) addDeviceToProgram(w http.ResponseWriter, r *http.Request) 
 	dur, _ := time.ParseDuration(data["duration"])
 
 	if err == nil {
-		s.eventChan <- core.MsgProgramAddDevice{MsgRequest: core.MsgRequest{ResponseChan: rch}, Program: name, Device: data["device"], Duration: dur}
-	} else {
-		rch <- core.MsgResponse{Error: err}
+		prg, err := s.data.Programs.Get(name)
+		if err != nil {
+			s.sendResponse(w, r, err, nil)
+			return
+		}
+		dev, err := s.data.Devices.Get(data["device"])
+		if err != nil {
+			s.sendResponse(w, r, err, nil)
+			return
+		}
+		err = prg.AddDevice(dev, dur)
 	}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) delDeviceFromProgram(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
 	idx, _ := strconv.Atoi(vars["idx"])
 
-	s.eventChan <- core.MsgProgramDelDevice{MsgRequest: core.MsgRequest{ResponseChan: rch}, Program: name, Idx: idx}
-	s.handleResponse(w, r, rch)
+	prg, err := s.data.Programs.Get(name)
+	if err == nil {
+		err = prg.DelDevice(idx)
+	}
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) listSchedules(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
-	s.eventChan <- core.MsgScheduleList{MsgRequest: core.MsgRequest{ResponseChan: rch}}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, nil, s.data.Schedules)
 }
 
 func (s *httpServer) createSchedule(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
-
 	sch := &core.Schedule{}
 	err := json.NewDecoder(r.Body).Decode(sch)
 	if err == nil {
-		s.eventChan <- core.MsgScheduleCreate{MsgRequest: core.MsgRequest{ResponseChan: rch}, Schedule: sch}
-	} else {
-		rch <- core.MsgResponse{Error: err}
+		if len(sch.ProgramName) != 0 {
+			prg, err := s.data.Programs.Get(sch.ProgramName)
+			if err != nil {
+				s.sendResponse(w, r, err, nil)
+				return
+			}
+			sch.Program = prg
+		}
+		err = s.data.Schedules.Add(sch)
 	}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) getSchedule(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgScheduleGet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+	sch, err := s.data.Schedules.Get(name)
+	s.sendResponse(w, r, err, sch)
 }
 
 func (s *httpServer) delSchedule(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
-	s.eventChan <- core.MsgScheduleDel{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name}
-	s.handleResponse(w, r, rch)
+	err := s.data.Schedules.Del(name)
+	s.sendResponse(w, r, err, nil)
 }
 
 func (s *httpServer) setSchedule(w http.ResponseWriter, r *http.Request) {
-	rch := make(chan core.MsgResponse)
 	vars := mux.Vars(r)
 	name := vars["name"]
 
 	sch := &core.Schedule{}
 	err := json.NewDecoder(r.Body).Decode(sch)
 	if err == nil {
-		s.eventChan <- core.MsgScheduleSet{MsgRequest: core.MsgRequest{ResponseChan: rch}, Name: name, Schedule: sch}
-	} else {
-		rch <- core.MsgResponse{Error: err}
+		if len(sch.ProgramName) != 0 {
+			prg, err := s.data.Programs.Get(sch.ProgramName)
+			if err != nil {
+				s.sendResponse(w, r, err, nil)
+				return
+			}
+			sch.Program = prg
+		}
+		err = s.data.Schedules.Set(name, sch)
 	}
-	s.handleResponse(w, r, rch)
+	s.sendResponse(w, r, err, nil)
 }
 
-func (s *httpServer) handleResponse(w http.ResponseWriter, r *http.Request, rch chan core.MsgResponse) {
-	resp := <-rch
+func (s *httpServer) sendResponse(w http.ResponseWriter, r *http.Request, err error, body interface{}) {
 
-	switch resp.Error {
+	switch err {
 	case nil:
 		log.Printf("%s %s -> %s ", r.Method, r.URL, "200 OK")
-		if resp.Body != nil {
+		if body != nil {
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(w, utils.EncodeJson(resp.Body))
+			fmt.Fprint(w, utils.EncodeJson(body))
 		}
 	case core.NotFound:
-		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
-		http.Error(w, resp.Error.Error(), http.StatusNotFound)
+		log.Printf("%s %s -> %s ", r.Method, r.URL, err.Error())
+		http.Error(w, err.Error(), http.StatusNotFound)
 	case core.OutOfRange:
-		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
-		http.Error(w, resp.Error.Error(), http.StatusNotFound)
+		log.Printf("%s %s -> %s ", r.Method, r.URL, err.Error())
+		http.Error(w, err.Error(), http.StatusNotFound)
 	case core.AlreadyExists:
-		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
-		http.Error(w, resp.Error.Error(), http.StatusNotAcceptable)
+		log.Printf("%s %s -> %s ", r.Method, r.URL, err.Error())
+		http.Error(w, err.Error(), http.StatusNotAcceptable)
 	case core.DeviceInUse:
-		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
-		http.Error(w, resp.Error.Error(), http.StatusNotAcceptable)
+		log.Printf("%s %s -> %s ", r.Method, r.URL, err.Error())
+		http.Error(w, err.Error(), http.StatusNotAcceptable)
 	default:
-		log.Printf("%s %s -> %s ", r.Method, r.URL, resp.Error.Error())
-		http.Error(w, resp.Error.Error(), http.StatusInternalServerError)
+		log.Printf("%s %s -> %s ", r.Method, r.URL, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

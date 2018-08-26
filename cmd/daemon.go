@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -26,16 +25,17 @@ func init() {
 }
 
 func runDaemon() {
-	mainEvents := make(chan interface{})
 	g, err := gpio.New()
 	if err != nil {
 		log.Fatalf("failed to initialize the gpio library: %v", err)
 	}
 	core.InitGpio(g)
-	api := api.New(daemonSocket, mainEvents)
-	go api.Run()
 
-	core.LoadState()
-	core.Run(context.TODO(), mainEvents)
-	core.StoreState()
+	data := core.LoadState()
+	if data != nil {
+		api := api.New(daemonSocket, data)
+		go api.Run()
+
+		data.StoreState()
+	}
 }

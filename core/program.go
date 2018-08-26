@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,7 @@ type Program struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
 	running  bool
+	m        sync.Mutex
 }
 
 type Programs map[string]*Program
@@ -28,8 +30,8 @@ var (
 )
 
 func NewPrograms() *Programs {
-	progs := make(Programs)
-	return &progs
+	p := make(Programs)
+	return &p
 }
 
 func (p *Programs) Add(prog *Program) error {
@@ -59,13 +61,30 @@ func (p *Programs) Del(name string) error {
 	return NotFound
 }
 
+func (p *Programs) IsDeviceInUse(name string) bool {
+	for _, pr := range *p {
+		for _, e := range pr.Elements {
+			if e.DeviceName == name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (p *Program) AddDevice(device *Device, duration time.Duration) error {
+	p.m.Lock()
+	defer p.m.Unlock()
+
 	p.Elements = append(p.Elements, &ProgramElement{DeviceName: device.Name, Device: device, Duration: duration})
 
 	return nil
 }
 
 func (p *Program) DelDevice(idx int) error {
+	p.m.Lock()
+	defer p.m.Unlock()
+
 	if idx >= len(p.Elements) {
 		return OutOfRange
 	}
@@ -73,14 +92,10 @@ func (p *Program) DelDevice(idx int) error {
 	return nil
 }
 
-func (p *Program) Reset() {
-	p.cancel()
-	for _, elem := range p.Elements {
-		elem.Device.TurnOff()
-	}
-}
-
 func (p *Program) Start() {
+	p.m.Lock()
+	defer p.m.Unlock()
+
 	if !p.running {
 		p.ctx, p.cancel = context.WithCancel(context.Background())
 		go p.run()
@@ -88,18 +103,40 @@ func (p *Program) Start() {
 }
 
 func (p *Program) Stop() {
-	if p.running {
-		p.Reset()
+	p.m.Lock()
+	running := p.running
+	p.m.Unlock()
+
+	if running {
+		p.cancel()
+		p.m.Lock()
+		for _, elem := range p.Elements {
+			elem.Device.TurnOff()
+		}
+		p.m.Unlock()
 	}
 }
 
 func (p *Program) run() {
+	p.m.Lock()
 	p.running = true
-	defer func() { p.running = false }()
+	elements := p.Elements
+	p.m.Unlock()
+
+	defer func() {
+		p.m.Lock()
+		p.running = false
+		p.m.Unlock()
+	}()
 
 	log.Printf("program %s is started", p.Name)
+	for _, elem := range elements {
+		if elem.Device.IsOn() {
+			elem.Device.TurnOff()
+		}
+	}
 
-	for _, elem := range p.Elements {
+	for _, elem := range elements {
 		elem.Device.TurnOn()
 
 		t := time.NewTimer(elem.Duration)

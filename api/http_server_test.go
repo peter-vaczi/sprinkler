@@ -1,7 +1,6 @@
 package api_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -19,11 +18,10 @@ import (
 var httpAPI api.API
 
 func init() {
-	mainEvents := make(chan interface{})
 	gpioStub := NewGpioStub()
-	httpAPI = api.New("http://localhost:9999", mainEvents)
+	data := core.NewData()
+	httpAPI = api.New("http://localhost:9999", data)
 	core.InitGpio(gpioStub)
-	go core.Run(context.TODO(), mainEvents)
 }
 
 func jsonContains(t *testing.T, a, b string) {
@@ -155,14 +153,25 @@ func TestApiStartStopProgram(t *testing.T) {
 	req(t, "POST", "/v1/programs/pr1/devices", "{\"device\":\"dev1\", \"duration\":\"5s\"}", 200, "")
 	req(t, "POST", "/v1/programs/pr1/devices", "{\"device\":\"dev2\", \"duration\":\"8s\"}", 200, "")
 
-	// start pr
+	req(t, "POST", "/v1/programs", "{\"name\":\"pr2\"}", 200, "")
+
+	req(t, "POST", "/v1/programs/pr2/devices", "{\"device\":\"dev2\", \"duration\":\"5s\"}", 200, "")
+	req(t, "POST", "/v1/programs/pr2/devices", "{\"device\":\"dev1\", \"duration\":\"8s\"}", 200, "")
+
+	// start pr1
 	req(t, "POST", "/v1/programs/pr-unknown/start", "", 404, "Not found")
 	req(t, "POST", "/v1/programs/pr1/start", "", 200, "")
 	time.Sleep(100 * time.Millisecond)
 	req(t, "GET", "/v1/devices/dev1", "", 200, "{\"name\":\"dev1\", \"on\":true}")
 	req(t, "GET", "/v1/devices/dev2", "", 200, "{\"name\":\"dev2\", \"on\":false}")
 
-	// stop pr
+	// start pr2
+	req(t, "POST", "/v1/programs/pr2/start", "", 200, "")
+	time.Sleep(100 * time.Millisecond)
+	req(t, "GET", "/v1/devices/dev1", "", 200, "{\"name\":\"dev1\", \"on\":false}")
+	req(t, "GET", "/v1/devices/dev2", "", 200, "{\"name\":\"dev2\", \"on\":true}")
+
+	// stop pr1
 	req(t, "POST", "/v1/programs/pr-unknown/stop", "", 404, "Not found")
 	req(t, "POST", "/v1/programs/pr1/stop", "", 200, "")
 	time.Sleep(100 * time.Millisecond)
@@ -171,6 +180,7 @@ func TestApiStartStopProgram(t *testing.T) {
 
 	// cleanup
 	req(t, "DELETE", "/v1/programs/pr1", "", 200, "")
+	req(t, "DELETE", "/v1/programs/pr2", "", 200, "")
 	req(t, "DELETE", "/v1/devices/dev1", "", 200, "")
 	req(t, "DELETE", "/v1/devices/dev2", "", 200, "")
 }

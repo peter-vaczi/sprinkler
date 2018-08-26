@@ -1,7 +1,7 @@
 FULL=github.com/peter-vaczi/sprinkler
 ADDR=192.168.0.170
 OPTS=-s http://$(ADDR):8000
-#RACE=-race
+RACE=-race
 
 all: build test
 
