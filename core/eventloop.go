@@ -171,6 +171,14 @@ func handleEvent(event interface{}) {
 	case MsgScheduleList:
 		event.ResponseChan <- MsgResponse{Error: nil, Body: data.Schedules}
 	case MsgScheduleCreate:
+		if len(event.Schedule.ProgramName) != 0 {
+			prg, err := data.Programs.Get(event.Schedule.ProgramName)
+			if err != nil {
+				event.ResponseChan <- MsgResponse{Error: err}
+				return
+			}
+			event.Schedule.Program = prg
+		}
 		err := data.Schedules.Add(event.Schedule)
 		event.ResponseChan <- MsgResponse{Error: err}
 	case MsgScheduleGet:
@@ -180,7 +188,7 @@ func handleEvent(event interface{}) {
 		err := data.Schedules.Del(event.Name)
 		event.ResponseChan <- MsgResponse{Error: err}
 	case MsgScheduleSet:
-		if 0 < len(event.Schedule.ProgramName) {
+		if len(event.Schedule.ProgramName) != 0 {
 			prg, err := data.Programs.Get(event.Schedule.ProgramName)
 			if err != nil {
 				event.ResponseChan <- MsgResponse{Error: err}

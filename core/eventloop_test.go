@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -24,7 +25,11 @@ func sendReceive(t *testing.T, msg interface{}, err error) interface{} {
 	events <- msg
 	resp = <-responses
 	cancel()
-	assert.Equal(t, err, resp.Error)
+	if err != nil {
+		assert.Equal(t, err, resp.Error)
+	} else {
+		assert.Nil(t, resp.Error)
+	}
 	return resp.Body
 }
 
@@ -154,9 +159,9 @@ func stopProgram(t *testing.T, pr string, err error) {
 	sendReceive(t, msg, err)
 }
 
-func addSchedule(t *testing.T, name string, spec string, err error) *core.Schedule {
+func addSchedule(t *testing.T, name string, spec string, prg string, err error) *core.Schedule {
 	t.Helper()
-	sc := &core.Schedule{Name: name, Spec: spec}
+	sc := &core.Schedule{Name: name, Spec: spec, ProgramName: prg}
 	msg := core.MsgScheduleCreate{MsgRequest: core.MsgRequest{ResponseChan: responses}, Schedule: sc}
 	body := sendReceive(t, msg, err)
 	assert.Empty(t, body)
@@ -329,9 +334,10 @@ func TestEventloopStartStopProgram(t *testing.T) {
 }
 
 func TestEventloopAddDelSchedule(t *testing.T) {
-	addSchedule(t, "sc1", "1 1 1 1 *", nil)
+	addSchedule(t, "sc1", "1 1 1 1 *", "", nil)
 
 	sc := getSchedule(t, "sc1", nil)
+	assert.NotNil(t, sc)
 	assert.Equal(t, "1 1 1 1 *", sc.Spec)
 
 	sc.Spec = "2 2 2 2 *"
@@ -353,13 +359,24 @@ func TestEventloopAddDelSchedule(t *testing.T) {
 
 	getSchedule(t, "unknown-schedule", core.NotFound)
 
+	addSchedule(t, "sc2", "1 1 1 1 *", "", nil)
+	sc = getSchedule(t, "sc2", nil)
+	assert.False(t, sc.Enabled)
+	sc.Enabled = true
+	setSchedule(t, "sc2", sc, nil)
+	sc = getSchedule(t, "sc2", nil)
+	assert.True(t, sc.Enabled)
+
+	addSchedule(t, "sc3", "1 1 1 1 * 1 1 1 1", "", fmt.Errorf("Expected exactly 5 fields, found 9: 1 1 1 1 * 1 1 1 1"))
+
 	scs := listSchedules(t)
-	assert.Equal(t, 1, len(*scs))
+	assert.Equal(t, 2, len(*scs))
 	s, _ := scs.Get("sc1")
 	assert.NotNil(t, s)
 
 	delSchedule(t, "sc1", nil)
 	getSchedule(t, "sc1", core.NotFound)
+	delSchedule(t, "sc2", nil)
 	delProgram(t, "pr1", nil)
 }
 

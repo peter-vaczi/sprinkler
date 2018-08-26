@@ -12,6 +12,7 @@ type Schedule struct {
 	Program     *Program      `json:"-"`
 	Spec        string        `json:"spec"`
 	Sched       cron.Schedule `json:"-"`
+	Enabled     bool          `json:"enabled"`
 }
 
 type Schedules map[string]*Schedule
@@ -26,6 +27,7 @@ func (s *Schedules) Add(sched *Schedule) error {
 		return AlreadyExists
 	}
 
+	sched.SetProgram(sched.Program)
 	err := sched.SetSpec(sched.Spec)
 	if err != nil {
 		return err
@@ -56,7 +58,15 @@ func (s *Schedules) Del(name string) error {
 func (s *Schedules) Set(name string, newSch *Schedule) error {
 	if sch, exists := (*s)[name]; exists {
 		sch.SetProgram(newSch.Program)
-		sch.SetSpec(newSch.Spec)
+		err := sch.SetSpec(newSch.Spec)
+		if err != nil {
+			return err
+		}
+		if newSch.Enabled {
+			sch.Enable()
+		} else {
+			sch.Disable()
+		}
 		return nil
 	}
 
@@ -78,6 +88,14 @@ func (s *Schedule) SetSpec(spec string) error {
 	s.Spec = spec
 	s.Sched = sc
 	return nil
+}
+
+func (s *Schedule) Enable() {
+	s.Enabled = true
+}
+
+func (s *Schedule) Disable() {
+	s.Enabled = false
 }
 
 func (s *Schedule) GetNext() time.Time {

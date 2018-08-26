@@ -1,6 +1,7 @@
 FULL=github.com/peter-vaczi/sprinkler
-ADDR=192.168.0.168
+ADDR=192.168.0.170
 OPTS=-s http://$(ADDR):8000
+#RACE=-race
 
 all: build test
 
@@ -11,8 +12,8 @@ install:
 	go install -v $(FULL)
 
 test:
-	go test -v $(FULL)/core
-	go test -v $(FULL)/api
+	go test $(RACE) -v $(FULL)/core
+	go test $(RACE) -v $(FULL)/api
 
 cover:
 	go test -cover -coverprofile cover.core.out $(FULL)/core
@@ -44,15 +45,15 @@ test_setup:
 	sprinkler $(OPTS) program adddevice pr2 dev5 --duration 10s
 
 test_cleanup:
-	sprinkler $(OPTS) program deldevice pr1 dev1
-	sprinkler $(OPTS) program deldevice pr1 dev2
-	sprinkler $(OPTS) program deldevice pr1 dev3
-	sprinkler $(OPTS) program deldevice pr1 dev4
-	sprinkler $(OPTS) program deldevice pr2 dev5
-	sprinkler $(OPTS) program del pr1
-	sprinkler $(OPTS) program del pr2
-	sprinkler $(OPTS) device del dev1
-	sprinkler $(OPTS) device del dev2
-	sprinkler $(OPTS) device del dev3
-	sprinkler $(OPTS) device del dev4
-	sprinkler $(OPTS) device del dev5
+	-sprinkler $(OPTS) program deldevice pr1 dev1
+	-sprinkler $(OPTS) program deldevice pr1 dev2
+	-sprinkler $(OPTS) program deldevice pr1 dev3
+	-sprinkler $(OPTS) program deldevice pr1 dev4
+	-sprinkler $(OPTS) program deldevice pr2 dev5
+	-sprinkler $(OPTS) program del pr1
+	-sprinkler $(OPTS) program del pr2
+	-sprinkler $(OPTS) device del dev1
+	-sprinkler $(OPTS) device del dev2
+	-sprinkler $(OPTS) device del dev3
+	-sprinkler $(OPTS) device del dev4
+	-sprinkler $(OPTS) device del dev5
