@@ -72,6 +72,12 @@ func (p *Programs) IsDeviceInUse(name string) bool {
 	return false
 }
 
+func (p *Programs) StopAll() {
+	for _, pr := range *p {
+		pr.Stop()
+	}
+}
+
 func (p *Program) AddDevice(device *Device, duration time.Duration) error {
 	p.m.Lock()
 	defer p.m.Unlock()
@@ -105,10 +111,11 @@ func (p *Program) Start() {
 func (p *Program) Stop() {
 	p.m.Lock()
 	running := p.running
+	cancel := p.cancel
 	p.m.Unlock()
 
 	if running {
-		p.cancel()
+		cancel()
 		p.m.Lock()
 		for _, elem := range p.Elements {
 			elem.Device.TurnOff()
@@ -143,6 +150,9 @@ func (p *Program) run() {
 		select {
 		case <-p.ctx.Done():
 			log.Printf("program %s is canceled", p.Name)
+			if !t.Stop() {
+				<-t.C
+			}
 			return
 		case <-t.C:
 			// do nothing

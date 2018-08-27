@@ -199,6 +199,10 @@ func TestApiAddDelSchedule(t *testing.T) {
 	req(t, "GET", "/v1/schedules/sc1", "", 200, "{\"name\":\"sc1\", \"spec\":\"4 4 4 4 *\", \"program\":\"pr1\"}")
 
 	req(t, "DELETE", "/v1/schedules/sc1", "", 200, "")
+	req(t, "POST", "/v1/schedules", "{\"name\":\"sc1\", \"spec\":\"4 4 4 4 *\", \"program\":\"pr1\"}", 200, "")
+	req(t, "GET", "/v1/schedules/sc1", "", 200, "{\"name\":\"sc1\", \"spec\":\"4 4 4 4 *\", \"program\":\"pr1\"}")
+
+	req(t, "DELETE", "/v1/schedules/sc1", "", 200, "")
 	req(t, "GET", "/v1/schedules/sc1", "", 404, "Not found")
 }
 

@@ -3,10 +3,13 @@ ADDR=192.168.0.170
 OPTS=-s http://$(ADDR):8000
 RACE=-race
 
-all: build test
+all: build build.debug test
 
 build:
 	go build -v
+
+build.debug:
+	go build -v -o sprinkler.debug -race
 
 install:
 	go install -v $(FULL)
@@ -43,6 +46,7 @@ test_setup:
 	sprinkler $(OPTS) program adddevice pr1 dev3 --duration 3s
 	sprinkler $(OPTS) program adddevice pr1 dev4 --duration 3s
 	sprinkler $(OPTS) program adddevice pr2 dev5 --duration 10s
+	sprinkler $(OPTS) schedule add sch1 --spec "* * * * *" --program pr1
 
 test_cleanup:
 	-sprinkler $(OPTS) program deldevice pr1 dev1

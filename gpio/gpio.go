@@ -1,6 +1,8 @@
 package gpio
 
-import rpio "github.com/stianeikeland/go-rpio"
+import (
+	rpio "github.com/stianeikeland/go-rpio"
+)
 
 //https://periph.io
 
@@ -42,3 +44,27 @@ func (p pin) High() {
 func (p pin) Low() {
 	rpio.Pin(p).Low()
 }
+
+type dummyGpioImpl struct {
+	pins map[int]*dummyPin
+}
+
+func NewDummy() Gpio {
+	return &dummyGpioImpl{pins: make(map[int]*dummyPin)}
+}
+
+func (g *dummyGpioImpl) NewPin(p int) Pin {
+	pin := &dummyPin{pin: p}
+	g.pins[p] = pin
+	return pin
+}
+
+type dummyPin struct {
+	pin    int
+	output bool
+	high   bool
+}
+
+func (p *dummyPin) Output() { p.output = true }
+func (p *dummyPin) High()   { p.high = true }
+func (p *dummyPin) Low()    { p.high = false }

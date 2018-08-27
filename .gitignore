@@ -1,5 +1,5 @@
 /vendor
 /sprinkler
-/sprctl
+/sprinkler.debug
 cover.*.out
 cover.*.html

@@ -70,6 +70,7 @@ func TestSchedules(t *testing.T) {
 		assert.Equal(t, s1.Spec, s2.Spec)
 		assert.Equal(t, s1.GetNext(), s2.GetNext())
 
+		scheds.DisableAll()
 		assert.NotNil(t, scheds.Del("s"))
 		assert.Nil(t, scheds.Del("sc1"))
 		assert.Nil(t, scheds.Del("sc2"))
@@ -90,6 +91,26 @@ func TestScheduleSetProgram(t *testing.T) {
 	p.AddDevice(d2, 1*time.Second)
 	s.SetProgram(p)
 	assert.NotNil(t, s.Program)
+	p.DelDevice(0)
+	p.DelDevice(0)
+}
+
+func TestScheduleEnableDisable(t *testing.T) {
+	gpioStub := NewGpioStub()
+	core.InitGpio(gpioStub)
+	d1 := &core.Device{Name: "dev1"}
+	d2 := &core.Device{Name: "dev2"}
+	p := &core.Program{Name: "pr1"}
+	s := &core.Schedule{Name: "sc1"}
+
+	p.AddDevice(d1, 1*time.Second)
+	p.AddDevice(d2, 1*time.Second)
+	s.SetProgram(p)
+	assert.NotNil(t, s.Program)
+	s.SetSpec("* * * * *")
+	s.Enable()
+	time.Sleep(100 * time.Millisecond)
+	s.Disable()
 	p.DelDevice(0)
 	p.DelDevice(0)
 }

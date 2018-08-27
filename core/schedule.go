@@ -1,6 +1,9 @@
 package core
 
 import (
+	"context"
+	"log"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron"
@@ -13,6 +16,9 @@ type Schedule struct {
 	Spec        string        `json:"spec"`
 	Sched       cron.Schedule `json:"-"`
 	Enabled     bool          `json:"enabled"`
+	m           sync.Mutex
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 type Schedules map[string]*Schedule
@@ -73,6 +79,12 @@ func (s *Schedules) Set(name string, newSch *Schedule) error {
 	return NotFound
 }
 
+func (s *Schedules) DisableAll() {
+	for _, sc := range *s {
+		sc.Disable()
+	}
+}
+
 func (s *Schedule) SetProgram(prog *Program) {
 	s.Program = prog
 	if prog != nil {
@@ -90,14 +102,55 @@ func (s *Schedule) SetSpec(spec string) error {
 	return nil
 }
 
+func (s *Schedule) GetNext() time.Time {
+	return s.Sched.Next(time.Now())
+}
+
 func (s *Schedule) Enable() {
+	s.m.Lock()
 	s.Enabled = true
+	s.m.Unlock()
+
+	s.kill()
+	go s.run()
 }
 
 func (s *Schedule) Disable() {
+	s.m.Lock()
 	s.Enabled = false
+	s.m.Unlock()
+
+	s.kill()
 }
 
-func (s *Schedule) GetNext() time.Time {
-	return s.Sched.Next(time.Now())
+func (s *Schedule) kill() {
+	s.m.Lock()
+	if s.cancel != nil {
+		s.cancel()
+		s.cancel = nil
+	}
+	s.m.Unlock()
+}
+
+func (s *Schedule) run() {
+	s.m.Lock()
+	next := s.GetNext()
+	prog := s.Program
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+	s.m.Unlock()
+
+	log.Printf("schedule %s will start program %s at %s", s.Name, s.Program.Name, next)
+	t := time.NewTimer(next.Sub(time.Now()))
+	select {
+	case <-s.ctx.Done():
+		log.Printf("schedule %s is canceled", s.Name)
+		if !t.Stop() {
+			<-t.C
+		}
+		return
+	case <-t.C:
+		log.Printf("schedule %s is starting program %s now", s.Name, s.Program.Name)
+		prog.Start()
+		go s.run()
+	}
 }

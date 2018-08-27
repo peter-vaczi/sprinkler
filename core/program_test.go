@@ -60,10 +60,17 @@ func TestProgramStartStop(t *testing.T) {
 }
 
 func TestPrograms(t *testing.T) {
+	gpioStub := NewGpioStub()
+	core.InitGpio(gpioStub)
+	d1 := &core.Device{Name: "dev1", Pin: 1}
+	d1.Init()
+
 	progs := core.NewPrograms()
 	if assert.NotNil(t, progs) {
 		p1 := &core.Program{Name: "pr1"}
 		p2 := &core.Program{Name: "pr2"}
+		assert.Nil(t, p1.AddDevice(d1, 1*time.Second))
+
 		assert.Nil(t, progs.Add(p1))
 		assert.NotEmpty(t, *progs)
 
@@ -82,6 +89,11 @@ func TestPrograms(t *testing.T) {
 		assert.Equal(t, p1, p)
 		assert.Nil(t, err)
 
+		assert.True(t, progs.IsDeviceInUse("dev1"))
+		assert.Nil(t, p1.DelDevice(0))
+		assert.False(t, progs.IsDeviceInUse("dev1"))
+
+		progs.StopAll()
 		assert.NotNil(t, progs.Del("p"))
 		assert.Nil(t, progs.Del("pr1"))
 		assert.Nil(t, progs.Del("pr2"))
