@@ -33,6 +33,9 @@ build.arm:
 	GOARCH=arm GOOS=linux go build $(FULL)
 	scp sprinkler root@$(ADDR):
 
+test_daemon:
+	sprinkler $(OPTS) daemon --test-mode
+
 test_setup:
 	sprinkler $(OPTS) device add dev1 --switch-on-low --pin 9
 	sprinkler $(OPTS) device add dev2 --switch-on-low --pin 10
@@ -47,8 +50,10 @@ test_setup:
 	sprinkler $(OPTS) program adddevice pr1 dev4 --duration 3s
 	sprinkler $(OPTS) program adddevice pr2 dev5 --duration 10s
 	sprinkler $(OPTS) schedule add sch1 --spec "* * * * *" --program pr1
+	sprinkler $(OPTS) schedule set sch1 --enable
 
 test_cleanup:
+	-sprinkler $(OPTS) schedule del sch1
 	-sprinkler $(OPTS) program deldevice pr1 dev1
 	-sprinkler $(OPTS) program deldevice pr1 dev2
 	-sprinkler $(OPTS) program deldevice pr1 dev3
